@@ -2,7 +2,7 @@
 
 ## Editing this repo
 
-Reccomended to use VSC, but any text editor will work.
+Recommended to use VSC, but any text editor will work.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
