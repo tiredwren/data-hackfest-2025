@@ -52,6 +52,18 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				focus: {
+					DEFAULT: 'hsl(var(--focus))',
+					foreground: 'hsl(var(--focus-foreground))'
+				},
+				warning: {
+					DEFAULT: 'hsl(var(--warning))',
+					foreground: 'hsl(var(--warning-foreground))'
+				},
+				calm: {
+					DEFAULT: 'hsl(var(--calm))',
+					foreground: 'hsl(var(--calm-foreground))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
