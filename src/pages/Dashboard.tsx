@@ -2,9 +2,26 @@ import { FocusCard } from "@/components/FocusCard";
 import { AppUsageChart } from "@/components/AppUsageChart";
 import { DistractionAlert } from "@/components/DistractionAlert";
 import { Button } from "@/components/ui/button";
-import { Clock, Smartphone, Zap, Target, Settings } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Clock, Smartphone, Zap, Target, Settings, RefreshCw } from "lucide-react";
+import { useUsageTracking } from "@/hooks/useUsageTracking";
+import { useEffect } from "react";
 
 export default function Dashboard() {
+  const { usageStats, isLoading, hasPermission, requestPermission, fetchUsageStats } = useUsageTracking();
+
+  useEffect(() => {
+    if (!hasPermission) {
+      requestPermission();
+    }
+  }, []);
+
+  const formatTime = (milliseconds: number) => {
+    const hours = Math.floor(milliseconds / (1000 * 60 * 60));
+    const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${minutes}m`;
+  };
+
   return (
     <div className="min-h-screen bg-background p-4">
       {/* Header */}
@@ -13,50 +30,83 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-foreground">FocusTrack</h1>
           <p className="text-muted-foreground">Your mindful usage companion</p>
         </div>
-        <Button variant="outline" size="icon">
-          <Settings className="h-4 w-4" />
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={fetchUsageStats}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button variant="outline" size="icon">
+            <Settings className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
+      {/* Permission Request */}
+      {!hasPermission && (
+        <Card className="border-warning bg-warning/5 mb-6">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <div className="text-warning">
+                <Smartphone className="h-12 w-12 mx-auto mb-2" />
+              </div>
+              <h3 className="text-lg font-semibold">Usage Access Required</h3>
+              <p className="text-muted-foreground">
+                Grant usage access permission to track your app usage and provide insights.
+              </p>
+              <Button onClick={requestPermission} className="bg-focus hover:bg-focus/90">
+                Grant Permission
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Distraction Alert */}
-      <DistractionAlert 
-        message="Frequent app switching detected"
-        appName="Instagram"
-        onTakeBreak={() => console.log("Taking break")}
-        onDismiss={() => console.log("Alert dismissed")}
-      />
+      {hasPermission && usageStats && usageStats.appSwitches > 50 && (
+        <DistractionAlert 
+          message="High app switching activity detected"
+          appName="Multiple Apps"
+          onTakeBreak={() => console.log("Taking break")}
+          onDismiss={() => console.log("Alert dismissed")}
+        />
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <FocusCard
           title="Focus Time Today"
-          value="4h 23m"
-          description="87% of your 5h goal"
-          progress={87}
+          value={usageStats ? formatTime(usageStats.focusTime) : "Loading..."}
+          description={usageStats ? `${Math.round((usageStats.focusTime / usageStats.totalScreenTime) * 100)}% of screen time` : "Calculating..."}
+          progress={usageStats ? Math.round((usageStats.focusTime / usageStats.totalScreenTime) * 100) : 0}
           variant="focus"
           icon={<Target className="h-4 w-4" />}
         />
         
         <FocusCard
           title="App Switches"
-          value="23"
-          description="Lower than yesterday"
-          variant="calm"
+          value={usageStats ? usageStats.appSwitches.toString() : "Loading..."}
+          description={usageStats && usageStats.appSwitches > 75 ? "Higher than average" : "Within normal range"}
+          variant={usageStats && usageStats.appSwitches > 75 ? "warning" : "calm"}
           icon={<Smartphone className="h-4 w-4" />}
         />
         
         <FocusCard
-          title="Longest Session"
-          value="1h 45m"
-          description="VS Code coding session"
-          variant="focus"
+          title="Screen Time"
+          value={usageStats ? formatTime(usageStats.totalScreenTime) : "Loading..."}
+          description="Total device usage today"
+          variant="calm"
           icon={<Clock className="h-4 w-4" />}
         />
         
         <FocusCard
-          title="Distraction Score"
-          value="Low"
-          description="3 interruptions detected"
+          title="Distraction Time"
+          value={usageStats ? formatTime(usageStats.distractionTime) : "Loading..."}
+          description={usageStats ? `${Math.round((usageStats.distractionTime / usageStats.totalScreenTime) * 100)}% of screen time` : "Calculating..."}
           variant="warning"
           icon={<Zap className="h-4 w-4" />}
         />
