@@ -8,6 +8,8 @@ import { useUsageTracking } from "@/hooks/useUsageTracking";
 import { UsageHeatmap } from "@/components/UsageHeatmap";
 import { FocusTrendsChart } from "@/components/FocusTrendsChart";
 import { DistractionPatterns } from "@/components/DistractionPatterns";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
 
 export default function PatternAnalysis() {
   const navigate = useNavigate();
@@ -55,7 +57,7 @@ export default function PatternAnalysis() {
       const response = await result.response;
       setAiSummary(response.text());
     } catch (error) {
-      console.error('Error generating AI summary:', error);
+      alert('Error generating AI summary:', error);
       setAiSummary('Unable to generate summary. Please try again later.');
     }
     setIsGenerating(false);
