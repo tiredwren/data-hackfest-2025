@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { UsageStatsPlugin } from '@/plugins/usageStats';
 import { useNotifications } from "@/hooks/useNotifications";
+import { toast } from '@/hooks/use-toast';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -68,17 +69,21 @@ export default function Dashboard() {
   };
 
   const requestPermission = async () => {
-    alert("Requesting permission...");
     setPermissionRequested(true);
-    try {
-      const res = await UsageStatsPlugin.requestPermission();
-      if (res.granted) {
-        setHasPermission(true);
-        fetchUsageStats();
-      }
-    } catch (err) {
-      alert("Permission request error:", err);
-    }
+    toast({
+            title: "Permission granted",
+            description: "You'll now receive insights on your focus trends.",
+          })
+
+//     try {
+//       const res = await UsageStatsPlugin.requestPermission();
+//       if (res.granted) {
+//         setHasPermission(true);
+//         fetchUsageStats();
+//       }
+//     } catch (err) {
+//       alert("Permission request error:", err);
+//     }
   };
 
   const fetchUsageStats = async () => {
