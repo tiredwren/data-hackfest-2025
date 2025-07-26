@@ -37,7 +37,7 @@ export default function Welcome() {
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Target className="h-8 w-8 text-focus" />
-            <h1 className="text-4xl font-bold text-foreground">FocusTrack</h1>
+            <h1 className="text-4xl font-bold text-foreground">Clarity</h1>
           </div>
           <p className="text-xl text-muted-foreground mb-4">
             Your mindful usage companion for better focus

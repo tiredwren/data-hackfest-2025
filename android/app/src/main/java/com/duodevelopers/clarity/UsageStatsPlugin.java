@@ -96,4 +96,15 @@ public class UsageStatsPlugin extends Plugin {
 
         call.resolve(result);
     }
+
+    // test
+
+    @PluginMethod
+    public void testEcho(PluginCall call) {
+        String value = call.getString("value");
+        JSObject ret = new JSObject();
+        ret.put("echo", value);
+        call.resolve(ret);
+    }
+
 }
