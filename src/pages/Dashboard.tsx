@@ -5,9 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, Smartphone, Zap, Target, Settings, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { UsageStatsPlugin } from '@/plugins/usageStats';
+import { useNotifications } from "@/hooks/useNotifications";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const { requestNotificationPermission } = useNotifications();
   const [usageStats, setUsageStats] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
@@ -15,6 +19,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     checkPermission();
+    requestNotificationPermission();
   }, []);
 
   const checkPermission = async () => {
@@ -179,7 +184,11 @@ export default function Dashboard() {
                 <Clock className="mr-2 h-4 w-4" />
                 Take Scheduled Break
               </Button>
-              <Button className="w-full justify-start" variant="outline">
+              <Button 
+                className="w-full justify-start" 
+                variant="outline"
+                onClick={() => navigate('/patterns')}
+              >
                 <Zap className="mr-2 h-4 w-4" />
                 Review Patterns
               </Button>
