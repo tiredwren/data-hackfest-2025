@@ -18,7 +18,7 @@ export default function PatternAnalysis() {
   const [aiSummary, setAiSummary] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const GEMINI_API_KEY = 'AIzaSyDjbO-hpqxxJ7xyZzLtnGhV-_H4YmAAVwU';
+  const GEMINI_API_KEY = 'AIzaSyAYrAc8otSeBuUTLzuT_ZXl-vWHpe56Gfc';
 
   const generateAISummary = async () => {
     if (!GEMINI_API_KEY) return;

@@ -1,11 +1,29 @@
 import { registerPlugin } from '@capacitor/core';
-import type { AppUsage, UsageStats } from '../hooks/useUsageTracking';
+
+export interface UsageStats {
+  totalScreenTime: number;
+  focusTime: number;
+  distractionTime: number;
+  appSwitches: number;
+}
+
+export interface ForegroundAppInfo {
+  packageName: string;
+  appName: string;
+}
+
+export interface AppSwitchInfo {
+  switched: boolean;
+  fromApp: string;
+  toApp: string;
+  timestamp: number;
+}
 
 export interface UsageStatsPlugin {
   requestPermission(): Promise<{ granted: boolean }>;
   getUsageStats(options: { startTime: number; endTime: number }): Promise<UsageStats>;
-  getCurrentForegroundApp(): Promise<{ packageName: string; appName: string }>;
-  detectAppSwitch(): Promise<{ switched: boolean; fromApp: string; toApp: string; timestamp: number }>;
+  getCurrentForegroundApp(): Promise<ForegroundAppInfo>;
+  detectAppSwitch(): Promise<AppSwitchInfo>;
 }
 
 export const UsageStatsPlugin = registerPlugin<UsageStatsPlugin>('UsageStatsPlugin', {

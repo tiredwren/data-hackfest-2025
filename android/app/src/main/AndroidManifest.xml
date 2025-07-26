@@ -31,6 +31,19 @@
 
         </activity>
 
+        <activity android:name="com.auth0.react.A0Auth0Activity">
+            <intent-filter android:label="Auth0">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="clarity"
+                    android:host="dev-a2jy8021kbq84xg3.us.auth0.com"
+                    android:pathPrefix="/android/com.duodevelopers.clarity/callback" />
+            </intent-filter>
+        </activity>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

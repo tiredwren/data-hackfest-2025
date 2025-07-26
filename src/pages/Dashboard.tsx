@@ -68,13 +68,13 @@ export default function Dashboard() {
     }
   };
 
-  const requestPermission = async () => {
-    setPermissionRequested(true);
-    toast({
-            title: "Permission granted",
-            description: "You'll now receive insights on your focus trends.",
-          })
-
+//   const requestPermission = async () => {
+// //     setPermissionRequested(true);
+// //     toast({
+// //             title: "Permission granted",
+// //             description: "You'll now receive insights on your focus trends.",
+// //           })
+//
 //     try {
 //       const res = await UsageStatsPlugin.requestPermission();
 //       if (res.granted) {
@@ -84,7 +84,46 @@ export default function Dashboard() {
 //     } catch (err) {
 //       alert("Permission request error:", err);
 //     }
-  };
+//   };
+
+const openPermissionSettings = async () => {
+  try {
+    await UsageStatsPlugin.openPermissionSettings();
+    toast({
+      title: "Almost there!",
+      description: "After granting access, come back and click 'Check Permission'.",
+    });
+  } catch (err) {
+    toast({
+      title: "Error",
+      description: "Could not open settings: " + (err?.message || "Unknown error"),
+      variant: "destructive",
+    });
+  }
+};
+
+const checkPermissionStatus = async () => {
+  try {
+    const res = await UsageStatsPlugin.checkPermissionStatus();
+    setHasPermission(res.granted);
+    if (res.granted) {
+      toast({
+        title: "Permission granted!",
+        description: "You’ll now receive insights on your focus trends.",
+      });
+      fetchUsageStats();
+    } else {
+      toast({
+        title: "Still waiting...",
+        description: "Please enable Usage Access for Clarity in settings.",
+        variant: "warning",
+      });
+    }
+  } catch (err) {
+    console.error("Permission check error:", err);
+  }
+};
+
 
   const fetchUsageStats = async () => {
     setIsLoading(true);
@@ -134,7 +173,7 @@ export default function Dashboard() {
             disabled={isLoading}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
+            {isLoading ? 'Refreshing...' : 'Refresh'}
           </Button>
           <Button variant="outline" size="icon">
             <Settings className="h-4 w-4" />
@@ -163,8 +202,15 @@ export default function Dashboard() {
               <p className="text-muted-foreground">
                 Grant usage access permission to track your app usage and provide insights.
               </p>
-              <Button onClick={requestPermission} className="bg-focus hover:bg-focus/90">
+              <Button onClick={openPermissionSettings} className="bg-focus hover:bg-focus/90">
                 Grant Permission
+              </Button>
+              <Button
+                onClick={checkPermissionStatus}
+                variant="outline"
+                className="text-sm mt-2"
+              >
+                I’ve granted permission
               </Button>
             </div>
           </CardContent>

@@ -11,9 +11,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@capacitor/android": "^7.4.2",
-    "@capacitor/cli": "^7.4.2",
-    "@capacitor/core": "^7.4.2",
+    "@auth0/auth0-react": "^2.4.0",
+    "@capacitor/android": "^7.0.0-rc.0",
+    "@capacitor/cli": "^7.0.0-rc.0",
+    "@capacitor/core": "^7.0.0-rc.0",
     "@capacitor/device": "^7.0.1",
     "@capacitor/ios": "^7.4.2",
     "@google/generative-ai": "^0.24.1",
