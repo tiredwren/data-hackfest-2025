@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Brain, Clock, TrendingUp, Calendar, Zap, Target } from "lucide-react";
+import { ArrowLeft, Brain, Clock, TrendingUp, Calendar, Zap, Target, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUsageTracking } from "@/hooks/useUsageTracking";
 import { UsageHeatmap } from "@/components/UsageHeatmap";
@@ -14,24 +12,19 @@ import { DistractionPatterns } from "@/components/DistractionPatterns";
 export default function PatternAnalysis() {
   const navigate = useNavigate();
   const { usageStats } = useUsageTracking();
-  const [geminiApiKey, setGeminiApiKey] = useState(localStorage.getItem('gemini-api-key') || '');
+
   const [aiSummary, setAiSummary] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const saveApiKey = () => {
-    localStorage.setItem('gemini-api-key', geminiApiKey);
-  };
+  const GEMINI_API_KEY = 'AIzaSyDjbO-hpqxxJ7xyZzLtnGhV-_H4YmAAVwU';
 
   const generateAISummary = async () => {
-    if (!geminiApiKey) {
-      alert('Please enter your Gemini API key first');
-      return;
-    }
+    if (!GEMINI_API_KEY) return;
 
     setIsGenerating(true);
     try {
       const { GoogleGenerativeAI } = await import('@google/generative-ai');
-      const genAI = new GoogleGenerativeAI(geminiApiKey);
+      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
       const usageData = {
@@ -44,78 +37,51 @@ export default function PatternAnalysis() {
 
       const prompt = `Analyze this phone usage data and create a natural, encouraging summary in 2-3 sentences:
 
-Total screen time: ${Math.round(usageData.totalScreenTime / (1000 * 60))} minutes
-Focus time: ${Math.round(usageData.focusTime / (1000 * 60))} minutes  
-Distraction time: ${Math.round(usageData.distractionTime / (1000 * 60))} minutes
-App switches: ${usageData.appSwitches}
-Focus percentage: ${usageData.focusPercentage}%
+        Total screen time: ${Math.round(usageData.totalScreenTime / (1000 * 60))} minutes
+        Focus time: ${Math.round(usageData.focusTime / (1000 * 60))} minutes
+        Distraction time: ${Math.round(usageData.distractionTime / (1000 * 60))} minutes
+        App switches: ${usageData.appSwitches}
+        Focus percentage: ${usageData.focusPercentage}%
 
-Include:
-- Main focus periods and strongest streaks
-- Primary distraction sources
-- Comparison to typical usage (make up reasonable comparison)
-- Actionable suggestion for tomorrow
+        Include:
+        - Main focus periods and strongest streaks
+        - Primary distraction sources
+        - Comparison to typical usage (make up reasonable comparison)
+        - Actionable suggestion for tomorrow
 
-Keep it personal, encouraging, and under 100 words. Write like a helpful AI coach.`;
+        Keep it personal, encouraging, and under 100 words. Write like a helpful AI coach.`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
       setAiSummary(response.text());
     } catch (error) {
-      console.error('Error generating AI summary:', error);
-      setAiSummary('Unable to generate summary. Please check your API key and try again.');
+      alert('Error generating AI summary:', error);
+      setAiSummary('Unable to generate summary. Please try again later.');
     }
     setIsGenerating(false);
   };
+
+  // Generate on first load
+  useEffect(() => {
+    if (usageStats) generateAISummary();
+  }, [usageStats]);
 
   return (
     <div className="min-h-screen bg-background p-4">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="icon"
           onClick={() => navigate('/dashboard')}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Pattern Analysis</h1>
+          <h1 className="text-2xl font-bold text-foreground">Your Focus Trends</h1>
           <p className="text-muted-foreground">AI-powered insights into your usage patterns</p>
         </div>
       </div>
-
-      {/* API Key Setup */}
-      {!localStorage.getItem('gemini-api-key') && (
-        <Card className="border-focus bg-focus/5 mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Brain className="h-5 w-5 text-focus" />
-              Setup Gemini AI
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="api-key">Gemini API Key</Label>
-              <div className="flex gap-2 mt-1">
-                <Input
-                  id="api-key"
-                  type="password"
-                  placeholder="Enter your Gemini API key"
-                  value={geminiApiKey}
-                  onChange={(e) => setGeminiApiKey(e.target.value)}
-                />
-                <Button onClick={saveApiKey} disabled={!geminiApiKey}>
-                  Save
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Get your API key from <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-focus underline">Google AI Studio</a>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* AI Summary */}
       <Card className="mb-6">
@@ -125,12 +91,15 @@ Keep it personal, encouraging, and under 100 words. Write like a helpful AI coac
               <Brain className="h-5 w-5 text-focus" />
               Daily Summary
             </CardTitle>
-            <Button 
+            <Button
               onClick={generateAISummary}
-              disabled={isGenerating || !geminiApiKey}
+              disabled={isGenerating}
               size="sm"
+              variant="ghost"
+              className="text-sm gap-1"
             >
-              {isGenerating ? 'Generating...' : 'Generate Summary'}
+              <RefreshCw className="h-4 w-4" />
+              Refresh
             </Button>
           </div>
         </CardHeader>
@@ -140,7 +109,7 @@ Keep it personal, encouraging, and under 100 words. Write like a helpful AI coac
               <p className="text-foreground leading-relaxed">{aiSummary}</p>
             </div>
           ) : (
-            <p className="text-muted-foreground">Click "Generate Summary" to get AI insights about your usage patterns.</p>
+            <p className="text-muted-foreground">Loading your daily summary...</p>
           )}
         </CardContent>
       </Card>
@@ -160,12 +129,12 @@ Keep it personal, encouraging, and under 100 words. Write like a helpful AI coac
           </CardContent>
         </Card>
 
-        {/* Focus Trends */}
+        {/* Line Graph */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-focus" />
-              Focus Trends
+              Usage Over Time
             </CardTitle>
           </CardHeader>
           <CardContent>
