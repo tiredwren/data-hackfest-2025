@@ -2,30 +2,22 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, X } from "lucide-react";
 import { useState } from "react";
-import React from "react";
 
-export interface DistractionAlertProps {
+interface DistractionAlertProps {
   message: string;
   appName: string;
-  onTakeBreak: () => void;
-  onDismiss: () => void;
-  children?: React.ReactNode;
+  onDismiss?: () => void;
+  onTakeBreak?: () => void;
 }
 
-export function DistractionAlert({
-  message,
-  appName,
-  onTakeBreak,
-  onDismiss,
-  children
-}: DistractionAlertProps) {
+export function DistractionAlert({ message, appName, onDismiss, onTakeBreak }: DistractionAlertProps) {
   const [isVisible, setIsVisible] = useState(true);
 
   if (!isVisible) return null;
 
   const handleDismiss = () => {
     setIsVisible(false);
-    onDismiss();
+    onDismiss?.();
   };
 
   return (
@@ -55,7 +47,6 @@ export function DistractionAlert({
           </Button>
         </div>
       </AlertDescription>
-      {children}
     </Alert>
   );
 }

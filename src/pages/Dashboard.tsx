@@ -100,12 +100,7 @@ export default function Dashboard() {
         startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
       }
       const res = await UsageStatsPlugin.getUsageStats({ startTime, endTime });
-      setUsageStats({
-        focusTime: 600,
-        appSwitches: 70,
-        totalScreenTime: 3600, // 1 hr
-        distractionTime: 1800,
-      });
+      setUsageStats(res);
     } catch (err) {
       console.error("Error fetching usage stats:", err);
     }
@@ -186,7 +181,6 @@ export default function Dashboard() {
         />
       )}
 
-
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <FocusCard
@@ -231,7 +225,6 @@ export default function Dashboard() {
         <div className="space-y-4">
           <div className="bg-card border rounded-lg p-4">
             <h3 className="font-semibold mb-3">Quick Actions</h3>
-            {/* <DistractionDetector /> uncomment to show notification next to "start focus session" */}
             <div className="space-y-2">
               <Button
                 className="w-full justify-start"
