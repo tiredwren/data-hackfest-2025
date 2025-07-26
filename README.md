@@ -19,7 +19,7 @@ cd data-hackfest-2025
 npm i
 
 # Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+npx cap sync android
 ```
 
 ## Technologies used for this project

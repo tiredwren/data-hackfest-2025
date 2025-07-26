@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, Smartphone, Zap, Target, Settings, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
-import { registerPlugin } from '@capacitor/core';
-import { Device } from '@capacitor/device';
-
-const UsageStatsPlugin = registerPlugin<any>('UsageStatsPlugin');
+import { useNavigate } from "react-router-dom";
+import { UsageStatsPlugin } from '@/plugins/usageStats';
+import { useNotifications } from "@/hooks/useNotifications";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const { requestNotificationPermission } = useNotifications();
   const [usageStats, setUsageStats] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
@@ -18,6 +19,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     checkPermission();
+    requestNotificationPermission();
   }, []);
 
   const checkPermission = async () => {
@@ -33,38 +35,21 @@ export default function Dashboard() {
   };
 
   const requestPermission = async () => {
-    alert("Grant Permission button clicked!");
+    console.log("Requesting permission...");
     try {
-      const result = await UsageStatsPlugin.requestPermission();
-      alert("Permission result: " + JSON.stringify(result));
+      await UsageStatsPlugin.requestPermission();
       await checkPermission();
     } catch (err) {
-      alert("Error: " + JSON.stringify(err));
       console.error("Permission request error:", err);
     }
   };
-
-
-    useEffect(() => {
-      async function testDevice() {
-          try {
-              const info = await Device.getInfo();
-              alert("Device info:", info);
-          } catch {
-              alert("Plugin test failed", e);
-          }
-
-      }
-
-      testDevice();
-    }, []);
-
 
   const fetchUsageStats = async () => {
     setIsLoading(true);
     try {
       const endTime = Date.now();
       let startTime = focusStartTime;
+      // If no focus session started, default to today's start
       if (!startTime) {
         const now = new Date();
         startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
@@ -79,7 +64,7 @@ export default function Dashboard() {
 
   const handleStartFocusSession = () => {
     setFocusStartTime(Date.now());
-    setUsageStats(null);
+    setUsageStats(null); // Reset stats for new session
   };
 
   const formatTime = (milliseconds: number) => {
@@ -97,9 +82,9 @@ export default function Dashboard() {
           <p className="text-muted-foreground">Your mindful usage companion</p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
+          <Button 
+            variant="outline" 
+            size="sm" 
             onClick={fetchUsageStats}
             disabled={isLoading}
           >
@@ -114,20 +99,17 @@ export default function Dashboard() {
 
       {/* Permission Request */}
       {!hasPermission && (
-        <Card className="border-warning bg-warning/5 mb-6 shadow-md">
-          <CardContent className="pt-6 pb-6">
+        <Card className="border-warning bg-warning/5 mb-6">
+          <CardContent className="pt-6">
             <div className="text-center space-y-4">
               <div className="text-warning">
                 <Smartphone className="h-12 w-12 mx-auto mb-2" />
               </div>
               <h3 className="text-lg font-semibold">Usage Access Required</h3>
-              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              <p className="text-muted-foreground">
                 Grant usage access permission to track your app usage and provide insights.
               </p>
-              <Button
-                onClick={requestPermission}
-                className="bg-focus hover:bg-focus/90 text-white font-medium"
-              >
+              <Button onClick={requestPermission} className="bg-focus hover:bg-focus/90">
                 Grant Permission
               </Button>
             </div>
@@ -137,7 +119,7 @@ export default function Dashboard() {
 
       {/* Distraction Alert */}
       {hasPermission && usageStats && usageStats.appSwitches > 50 && (
-        <DistractionAlert
+        <DistractionAlert 
           message="High app switching activity detected"
           appName="Multiple Apps"
           onTakeBreak={() => console.log("Taking break")}
@@ -155,7 +137,7 @@ export default function Dashboard() {
           variant="focus"
           icon={<Target className="h-4 w-4" />}
         />
-
+        
         <FocusCard
           title="App Switches"
           value={usageStats ? usageStats.appSwitches.toString() : "Loading..."}
@@ -163,7 +145,7 @@ export default function Dashboard() {
           variant={usageStats && usageStats.appSwitches > 75 ? "warning" : "calm"}
           icon={<Smartphone className="h-4 w-4" />}
         />
-
+        
         <FocusCard
           title="Screen Time"
           value={usageStats ? formatTime(usageStats.totalScreenTime) : "Loading..."}
@@ -171,7 +153,7 @@ export default function Dashboard() {
           variant="calm"
           icon={<Clock className="h-4 w-4" />}
         />
-
+        
         <FocusCard
           title="Distraction Time"
           value={usageStats ? formatTime(usageStats.distractionTime) : "Loading..."}
@@ -181,17 +163,17 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Usage Chart and Quick Actions */}
+      {/* Usage Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <AppUsageChart />
-
+        
+        {/* Quick Actions */}
         <div className="space-y-4">
-          {/* Quick Actions */}
           <div className="bg-card border rounded-lg p-4">
             <h3 className="font-semibold mb-3">Quick Actions</h3>
             <div className="space-y-2">
-              <Button
-                className="w-full justify-start"
+              <Button 
+                className="w-full justify-start" 
                 variant="outline"
                 onClick={handleStartFocusSession}
               >
@@ -202,14 +184,18 @@ export default function Dashboard() {
                 <Clock className="mr-2 h-4 w-4" />
                 Take Scheduled Break
               </Button>
-              <Button className="w-full justify-start" variant="outline">
+              <Button 
+                className="w-full justify-start" 
+                variant="outline"
+                onClick={() => navigate('/patterns')}
+              >
                 <Zap className="mr-2 h-4 w-4" />
                 Review Patterns
               </Button>
             </div>
           </div>
 
-          {/* Insights */}
+          {/* Today's Insights */}
           <div className="bg-card border rounded-lg p-4">
             <h3 className="font-semibold mb-3">Today's Insights</h3>
             <div className="space-y-3">
