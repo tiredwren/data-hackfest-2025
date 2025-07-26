@@ -55,7 +55,7 @@ export default function PatternAnalysis() {
       const response = await result.response;
       setAiSummary(response.text());
     } catch (error) {
-      alert('Error generating AI summary:', error);
+      console.error('Error generating AI summary:', error);
       setAiSummary('Unable to generate summary. Please try again later.');
     }
     setIsGenerating(false);
@@ -166,7 +166,9 @@ export default function PatternAnalysis() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Peak Focus Hour</p>
-                <p className="text-lg font-semibold">9:00 - 10:00 AM</p>
+                <p className="text-lg font-semibold">
+                  {usageStats?.focusTime > 0 ? '9:00 - 11:00 AM' : 'No data yet'}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -180,7 +182,13 @@ export default function PatternAnalysis() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Most Distracting</p>
-                <p className="text-lg font-semibold">Social Media</p>
+                <p className="text-lg font-semibold">
+                  {usageStats?.apps?.find(app => 
+                    app.packageName.includes('instagram') || 
+                    app.packageName.includes('tiktok') ||
+                    app.packageName.includes('facebook')
+                  )?.appName || 'Social Media'}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -194,7 +202,12 @@ export default function PatternAnalysis() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Avg Session</p>
-                <p className="text-lg font-semibold">23 minutes</p>
+                <p className="text-lg font-semibold">
+                  {usageStats?.apps?.length > 0 
+                    ? `${Math.round(usageStats.totalScreenTime / (usageStats.apps.length * 1000 * 60))} min`
+                    : 'No data'
+                  }
+                </p>
               </div>
             </div>
           </CardContent>
