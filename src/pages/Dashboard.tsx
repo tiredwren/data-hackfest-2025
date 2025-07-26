@@ -5,9 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, Smartphone, Zap, Target, Settings, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
-import { registerPlugin } from '@capacitor/core';
-
-const UsageStatsPlugin = registerPlugin<any>('UsageStatsPlugin');
+import { UsageStatsPlugin } from '@/plugins/usageStats';
 
 export default function Dashboard() {
   const [usageStats, setUsageStats] = useState<any>(null);

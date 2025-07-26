@@ -8,6 +8,6 @@ export interface UsageStatsPlugin {
   detectAppSwitch(): Promise<{ switched: boolean; fromApp: string; toApp: string; timestamp: number }>;
 }
 
-export const UsageStatsPlugin = registerPlugin<UsageStatsPlugin>('UsageStats', {
+export const UsageStatsPlugin = registerPlugin<UsageStatsPlugin>('UsageStatsPlugin', {
   web: () => import('./usageStats.web').then(m => new m.UsageStatsWeb()),
 });
