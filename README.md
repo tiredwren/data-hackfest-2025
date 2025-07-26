@@ -18,8 +18,10 @@ cd data-hackfest-2025
 # Step 3: Install the necessary dependencies.
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npx cap sync android
+# Step 4: Start the development server
+npm run build
+npx cap sync
+npx cap run android
 ```
 
 ## Technologies used for this project
