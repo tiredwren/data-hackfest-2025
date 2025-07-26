@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { UsageStatsPlugin } from '@/plugins/usageStats';
 import { useNotifications } from "@/hooks/useNotifications";
+import { toast } from '@/hooks/use-toast';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -15,12 +16,45 @@ export default function Dashboard() {
   const [usageStats, setUsageStats] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
-  const [focusStartTime, setFocusStartTime] = useState<number | null>(null);
+  const [focusSessionRunning, setFocusSessionRunning] = useState(false);
+  const [focusRemaining, setFocusRemaining] = useState<number>(0);
+  const [permissionRequested, setPermissionRequested] = useState(false);
 
   useEffect(() => {
     checkPermission();
     requestNotificationPermission();
+
+    const focusState = localStorage.getItem("focusSession");
+    if (focusState) {
+      const parsed = JSON.parse(focusState);
+      const now = Date.now();
+      const remaining = parsed.endTime - now;
+      if (remaining > 0) {
+        setFocusSessionRunning(true);
+        setFocusRemaining(remaining);
+      } else {
+        localStorage.removeItem("focusSession");
+      }
+    }
   }, []);
+
+  useEffect(() => {
+    let timer: any;
+    if (focusSessionRunning) {
+      timer = setInterval(() => {
+        setFocusRemaining((prev) => {
+          if (prev <= 1000) {
+            setFocusSessionRunning(false);
+            localStorage.removeItem("focusSession");
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1000;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [focusSessionRunning]);
 
   const checkPermission = async () => {
     try {
@@ -35,22 +69,33 @@ export default function Dashboard() {
   };
 
   const requestPermission = async () => {
-    console.log("Requesting permission...");
-    try {
-      await UsageStatsPlugin.requestPermission();
-      await checkPermission();
-    } catch (err) {
-      console.error("Permission request error:", err);
-    }
+    setPermissionRequested(true);
+    toast({
+            title: "Permission granted",
+            description: "You'll now receive insights on your focus trends.",
+          })
+
+//     try {
+//       const res = await UsageStatsPlugin.requestPermission();
+//       if (res.granted) {
+//         setHasPermission(true);
+//         fetchUsageStats();
+//       }
+//     } catch (err) {
+//       alert("Permission request error:", err);
+//     }
   };
 
   const fetchUsageStats = async () => {
     setIsLoading(true);
     try {
       const endTime = Date.now();
-      let startTime = focusStartTime;
-      // If no focus session started, default to today's start
-      if (!startTime) {
+      const focusState = localStorage.getItem("focusSession");
+      let startTime;
+      if (focusState) {
+        const parsed = JSON.parse(focusState);
+        startTime = parsed.startTime;
+      } else {
         const now = new Date();
         startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
       }
@@ -63,14 +108,14 @@ export default function Dashboard() {
   };
 
   const handleStartFocusSession = () => {
-    setFocusStartTime(Date.now());
-    setUsageStats(null); // Reset stats for new session
+    navigate('/pomodoro');
   };
 
   const formatTime = (milliseconds: number) => {
-    const hours = Math.floor(milliseconds / (1000 * 60 * 60));
-    const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours}h ${minutes}m`;
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}m ${seconds}s`;
   };
 
   return (
@@ -82,9 +127,9 @@ export default function Dashboard() {
           <p className="text-muted-foreground">Your mindful usage companion</p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={fetchUsageStats}
             disabled={isLoading}
           >
@@ -97,8 +142,17 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Focus Timer Banner */}
+      {focusSessionRunning && (
+        <Card className="border-focus bg-focus/10 text-focus font-semibold mb-6">
+          <CardContent className="py-4 text-center">
+            Focus session running: {formatTime(focusRemaining)} left
+          </CardContent>
+        </Card>
+      )}
+
       {/* Permission Request */}
-      {!hasPermission && (
+      {!hasPermission && !permissionRequested && (
         <Card className="border-warning bg-warning/5 mb-6">
           <CardContent className="pt-6">
             <div className="text-center space-y-4">
@@ -119,7 +173,7 @@ export default function Dashboard() {
 
       {/* Distraction Alert */}
       {hasPermission && usageStats && usageStats.appSwitches > 50 && (
-        <DistractionAlert 
+        <DistractionAlert
           message="High app switching activity detected"
           appName="Multiple Apps"
           onTakeBreak={() => console.log("Taking break")}
@@ -137,7 +191,7 @@ export default function Dashboard() {
           variant="focus"
           icon={<Target className="h-4 w-4" />}
         />
-        
+
         <FocusCard
           title="App Switches"
           value={usageStats ? usageStats.appSwitches.toString() : "Loading..."}
@@ -145,7 +199,7 @@ export default function Dashboard() {
           variant={usageStats && usageStats.appSwitches > 75 ? "warning" : "calm"}
           icon={<Smartphone className="h-4 w-4" />}
         />
-        
+
         <FocusCard
           title="Screen Time"
           value={usageStats ? formatTime(usageStats.totalScreenTime) : "Loading..."}
@@ -153,7 +207,7 @@ export default function Dashboard() {
           variant="calm"
           icon={<Clock className="h-4 w-4" />}
         />
-        
+
         <FocusCard
           title="Distraction Time"
           value={usageStats ? formatTime(usageStats.distractionTime) : "Loading..."}
@@ -166,14 +220,14 @@ export default function Dashboard() {
       {/* Usage Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <AppUsageChart />
-        
+
         {/* Quick Actions */}
         <div className="space-y-4">
           <div className="bg-card border rounded-lg p-4">
             <h3 className="font-semibold mb-3">Quick Actions</h3>
             <div className="space-y-2">
-              <Button 
-                className="w-full justify-start" 
+              <Button
+                className="w-full justify-start"
                 variant="outline"
                 onClick={handleStartFocusSession}
               >
@@ -184,8 +238,8 @@ export default function Dashboard() {
                 <Clock className="mr-2 h-4 w-4" />
                 Take Scheduled Break
               </Button>
-              <Button 
-                className="w-full justify-start" 
+              <Button
+                className="w-full justify-start"
                 variant="outline"
                 onClick={() => navigate('/patterns')}
               >

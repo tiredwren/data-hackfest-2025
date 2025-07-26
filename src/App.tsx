@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Welcome from "./pages/Welcome";
 import Dashboard from "./pages/Dashboard";
 import PatternAnalysis from "./pages/PatternAnalysis";
+import PomodoroTimer from "./pages/PomodoroTimer";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,7 +23,7 @@ const App = () => (
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/patterns" element={<PatternAnalysis />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/pomodoro" element={<PomodoroTimer />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
