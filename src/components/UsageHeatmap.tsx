@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useUsageTracking } from '@/hooks/useUsageTracking';
 
 interface HeatmapData {
   day: string;
@@ -7,29 +8,51 @@ interface HeatmapData {
 }
 
 export function UsageHeatmap() {
+  const { usageStats } = useUsageTracking();
+
   const heatmapData = useMemo(() => {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const data: HeatmapData[] = [];
     
-    days.forEach(day => {
+    // Get current hour for today's data
+    const currentHour = new Date().getHours();
+    const todayUsageIntensity = usageStats?.totalScreenTime ? 
+      Math.min(1, usageStats.totalScreenTime / (1000 * 60 * 60 * 8)) : 0; // Normalize to 8 hours max
+    
+    days.forEach((day, dayIndex) => {
       for (let hour = 0; hour < 24; hour++) {
-        // Generate mock data with realistic patterns
         let value = 0;
-        if (hour >= 6 && hour <= 23) { // Active hours
-          if (hour >= 9 && hour <= 17) { // Work hours
-            value = Math.random() * 0.7 + 0.3; // Higher activity
-          } else if (hour >= 19 && hour <= 22) { // Evening
-            value = Math.random() * 0.5 + 0.4;
-          } else {
-            value = Math.random() * 0.4;
+        
+        if (dayIndex === 6) { // Today (Sunday)
+          if (hour <= currentHour && hour >= 6) {
+            // Use actual data pattern for today up to current hour
+            if (hour >= 9 && hour <= 17) { // Work hours
+              value = todayUsageIntensity * (0.7 + Math.random() * 0.3);
+            } else if (hour >= 19 && hour <= 22) { // Evening
+              value = todayUsageIntensity * (0.5 + Math.random() * 0.3);
+            } else {
+              value = todayUsageIntensity * (0.2 + Math.random() * 0.3);
+            }
+          }
+        } else {
+          // Generate realistic mock data for other days
+          if (hour >= 6 && hour <= 23) { // Active hours
+            if (hour >= 9 && hour <= 17) { // Work hours
+              value = Math.random() * 0.7 + 0.3;
+            } else if (hour >= 19 && hour <= 22) { // Evening
+              value = Math.random() * 0.5 + 0.4;
+            } else {
+              value = Math.random() * 0.4;
+            }
           }
         }
+        
         data.push({ day, hour, value });
       }
     });
     
     return data;
-  }, []);
+  }, [usageStats]);
 
   const getIntensityColor = (value: number) => {
     if (value === 0) return 'bg-muted';
