@@ -4,7 +4,7 @@ import { useRealUsageStats } from "@/hooks/useRealUsageStats";
 
 export function AppUsageChart() {
   const today = new Date().toISOString().split('T')[0];
-  const { stats } = useRealUsageStats({
+  const { stats, isLoading } = useRealUsageStats({
     startDate: today,
     endDate: today
   });
