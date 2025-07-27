@@ -3,7 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.duodevelopers.clarity">
 
-    <!-- Permissions -->
+
+<!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
@@ -29,6 +30,30 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- 🔽 Add this deep link intent filter here too -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="clarity"
+                    android:host="dev-a2jy8021kbq84xg3.us.auth0.com"
+                    android:pathPrefix="/android/com.duodevelopers.clarity/callback" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name="com.auth0.react.A0Auth0Activity"
+            android:exported="true">
+            <intent-filter android:label="Auth0">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="clarity"
+                    android:host="dev-a2jy8021kbq84xg3.us.auth0.com"
+                    android:pathPrefix="/android/com.duodevelopers.clarity/callback" />
+            </intent-filter>
         </activity>
 
         <provider
