@@ -173,11 +173,11 @@ export default function Dashboard() {
           title="Focus Time Today"
           value={isLoading ? "Loading..." : (stats ? formatTime(stats.totalFocusTime) : "0m")}
           description={isLoading ? "Loading..." : (stats && stats.totalScreenTime > 0 ?
-            `${Math.min(Math.round((stats.totalFocusTime / stats.totalScreenTime) * 100), 100)}% of screen time` :
+            `${Math.min(Math.max(Math.round((stats.totalFocusTime / stats.totalScreenTime) * 100), 0), 100)}% of screen time` :
             "Start a focus session"
           )}
           progress={isLoading ? 0 : (stats && stats.totalScreenTime > 0 ?
-            Math.min(Math.round((stats.totalFocusTime / stats.totalScreenTime) * 100), 100) : 0
+            Math.min(Math.max(Math.round((stats.totalFocusTime / stats.totalScreenTime) * 100), 0), 100) : 0
           )}
           variant="focus"
           icon={<Target className="h-4 w-4" />}
@@ -203,7 +203,7 @@ export default function Dashboard() {
           title="Distraction Time"
           value={isLoading ? "Loading..." : (stats ? formatTime(stats.distractionTime) : "0m")}
           description={isLoading ? "Loading..." : (stats && stats.totalScreenTime > 0 ?
-            `${Math.min(Math.round((stats.distractionTime / stats.totalScreenTime) * 100), 100)}% of screen time` :
+            `${Math.min(Math.max(Math.round((stats.distractionTime / stats.totalScreenTime) * 100), 0), 100)}% of screen time` :
             "No distractions yet"
           )}
           variant="warning"

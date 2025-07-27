@@ -26,11 +26,18 @@ export const useRealUsageStats = (dateRange: { startDate: string; endDate: strin
     const localData = getCurrentStats();
 
     // Calculate distraction time more accurately
-    // If we have focus time, distraction time is screen time - focus time
-    // Otherwise, use a more conservative estimate
-    const calculatedDistractionTime = localData.screenTime > localData.focusTime
-      ? localData.screenTime - localData.focusTime
-      : Math.min(localData.distractions * 15000, localData.screenTime * 0.8); // Max 80% of screen time
+    // Distraction time should be the difference between screen time and focus time
+    // But never exceed screen time or be negative
+    const rawDistractionTime = Math.max(0, localData.screenTime - localData.focusTime);
+
+    // If we don't have focus tracking data, estimate based on distraction events
+    // Each distraction represents about 2-3 minutes of lost focus (conservative estimate)
+    const estimatedFromDistractions = localData.distractions * 120000; // 2 minutes per distraction
+
+    // Use the smaller of the two estimates, but cap at total screen time
+    const calculatedDistractionTime = localData.focusTime > 0
+      ? Math.min(rawDistractionTime, localData.screenTime)
+      : Math.min(estimatedFromDistractions, localData.screenTime * 0.6); // Max 60% if no focus data
 
     return {
       totalFocusTime: localData.focusTime,
