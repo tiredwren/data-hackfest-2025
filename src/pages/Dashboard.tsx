@@ -302,15 +302,7 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Focus Tip */}
-          {focusTip && (
-            <div className="bg-card border rounded-lg p-4 mb-4">
-              <h3 className="font-semibold mb-3">Focus Tip</h3>
-              <div className="text-sm text-muted-foreground">
-                {focusTip}
-              </div>
-            </div>
-          )}
+
 
           {/* Today's Insights */}
           <div className="bg-card border rounded-lg p-4">
