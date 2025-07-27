@@ -73,12 +73,7 @@ export default function PatternAnalysis() {
     setIsGeneratingInsights(false);
   };
 
-  // Generate summary on first load
-  useEffect(() => {
-    if (stats) {
-      generateAISummary();
-    }
-  }, [stats]);
+
 
   const formatSummaryText = (text: string) => {
     // Remove ** formatting and convert to proper heading if needed
