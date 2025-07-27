@@ -35,8 +35,14 @@ export default function PatternAnalysis() {
       toast.success("Daily summary generated!");
     } catch (error) {
       console.error('Error generating AI summary:', error);
-      setAiSummary('Unable to generate summary. Please try again later.');
-      toast.error("Failed to generate summary");
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
+        setAiSummary('⚠️ Daily AI usage limit reached. Summary will be available tomorrow!');
+        toast.error("Daily AI limit reached");
+      } else {
+        setAiSummary('🤖 AI summary temporarily unavailable. Your focus tracking continues!');
+        toast.error("AI service temporarily unavailable");
+      }
     }
     setIsGeneratingSummary(false);
   };
@@ -51,8 +57,14 @@ export default function PatternAnalysis() {
       toast.success("AI insights generated!");
     } catch (error) {
       console.error('Error generating AI insights:', error);
-      setAiInsights('Unable to generate insights. Please try again later.');
-      toast.error("Failed to generate insights");
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
+        setAiInsights('⚠️ Daily AI usage limit reached. Insights will be available tomorrow!\n\nIn the meantime, review your patterns manually using the charts above.');
+        toast.error("Daily AI limit reached");
+      } else {
+        setAiInsights('🤖 AI insights temporarily unavailable. You can still analyze your patterns using the visualizations above!\n\nTry refreshing in a few minutes or check your internet connection.');
+        toast.error("AI service temporarily unavailable");
+      }
     }
     setIsGeneratingInsights(false);
   };
