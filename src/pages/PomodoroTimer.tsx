@@ -341,8 +341,8 @@ export default function PomodoroTimer() {
     setDuration(focus);
     setBreakDuration(breakT);
     setElapsed(0);
-
     setIsRunning(false);
+    stopMusic();
   };
   const progressColor = mode === "focus" ? "bg-green-500" : "bg-purple-400";
 
