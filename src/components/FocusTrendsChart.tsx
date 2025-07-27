@@ -6,7 +6,7 @@ export function FocusTrendsChart() {
   const today = new Date().toISOString().split('T')[0];
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   
-  const { stats: usageStats } = useRealUsageStats({
+  const { stats: usageStats, isLoading } = useRealUsageStats({
     startDate: weekAgo,
     endDate: today
   });
