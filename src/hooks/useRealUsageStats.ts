@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
+import { useLocalUsageTracker } from './useLocalUsageTracker';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -16,44 +17,77 @@ export interface RealUsageStats {
 
 export const useRealUsageStats = (dateRange: { startDate: string; endDate: string }) => {
   const { user, isAuthenticated } = useAuth0();
+  const { getCurrentStats } = useLocalUsageTracker();
   const [stats, setStats] = useState<RealUsageStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStats = async () => {
-    if (!isAuthenticated || !user?.sub) return;
+  const getLocalStats = (): RealUsageStats => {
+    const localData = getCurrentStats();
 
+    return {
+      totalFocusTime: localData.focusTime,
+      totalScreenTime: localData.screenTime,
+      appSwitches: localData.tabSwitches,
+      distractionTime: localData.distractions * 30000, // 30 seconds per distraction
+      sessionCount: localData.focusSessions,
+      distractionCount: localData.distractions,
+      activities: [],
+      focusSessions: []
+    };
+  };
+
+  const fetchStats = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Fetch focus stats
-      const focusResponse = await fetch(
-        `${API_BASE}/focus/stats/${user.sub}?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`
-      );
-      const focusData = await focusResponse.json();
+      // First, try to get data from backend if authenticated
+      if (isAuthenticated && user?.sub) {
+        try {
+          // Fetch focus stats
+          const focusResponse = await fetch(
+            `${API_BASE}/focus/stats/${user.sub}?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`
+          );
+          const focusData = await focusResponse.json();
 
-      // Fetch activity stats
-      const activityResponse = await fetch(
-        `${API_BASE}/activity/stats/${user.sub}?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`
-      );
-      const activityData = await activityResponse.json();
+          // Fetch activity stats
+          const activityResponse = await fetch(
+            `${API_BASE}/activity/stats/${user.sub}?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`
+          );
+          const activityData = await activityResponse.json();
 
-      const combinedStats: RealUsageStats = {
-        totalFocusTime: focusData.totalFocusTime || 0,
-        totalScreenTime: activityData.totalScreenTime || 0,
-        appSwitches: activityData.appSwitches || 0,
-        distractionTime: activityData.distractionTime || 0,
-        sessionCount: focusData.sessionCount || 0,
-        distractionCount: activityData.distractionCount || 0,
-        activities: activityData.activities || [],
-        focusSessions: focusData.sessions || []
-      };
+          const combinedStats: RealUsageStats = {
+            totalFocusTime: focusData.totalFocusTime || 0,
+            totalScreenTime: activityData.totalScreenTime || 0,
+            appSwitches: activityData.appSwitches || 0,
+            distractionTime: activityData.distractionTime || 0,
+            sessionCount: focusData.sessionCount || 0,
+            distractionCount: activityData.distractionCount || 0,
+            activities: activityData.activities || [],
+            focusSessions: focusData.sessions || []
+          };
 
-      setStats(combinedStats);
+          setStats(combinedStats);
+          return;
+        } catch (err) {
+          console.warn('Backend unavailable, falling back to local data:', err);
+        }
+      }
+
+      // Fallback to local stats
+      const localStats = getLocalStats();
+      setStats(localStats);
+
+      if (!isAuthenticated) {
+        setError('Connect to sync data across devices');
+      }
     } catch (err) {
       console.error('Failed to fetch stats:', err);
-      setError('Failed to load usage statistics');
+      // Even if there's an error, show local stats
+      const localStats = getLocalStats();
+      setStats(localStats);
+      setError('Using local data only');
     } finally {
       setIsLoading(false);
     }
@@ -62,6 +96,16 @@ export const useRealUsageStats = (dateRange: { startDate: string; endDate: strin
   useEffect(() => {
     fetchStats();
   }, [isAuthenticated, user?.sub, dateRange.startDate, dateRange.endDate]);
+
+  // Refresh stats periodically to get updated local data
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const localStats = getLocalStats();
+      setStats(localStats);
+    }, 5000); // Update every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   return {
     stats,
