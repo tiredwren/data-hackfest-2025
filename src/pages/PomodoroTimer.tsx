@@ -50,6 +50,11 @@ export default function PomodoroTimer() {
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastModeRef = useRef<"focus" | "break">("focus");
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const musicNodesRef = useRef<{
+    oscillators: OscillatorNode[];
+    gainNode: GainNode | null;
+  }>({ oscillators: [], gainNode: null });
 
   const presets = [
     { label: "0.2/0.05", focus: 5, break: 3 },
