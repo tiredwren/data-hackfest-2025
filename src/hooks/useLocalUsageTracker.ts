@@ -136,17 +136,19 @@ export const useLocalUsageTracker = () => {
       screenTime: activeTimeRef.current,
       tabSwitches: tabSwitchCountRef.current,
       distractions: distractionCountRef.current,
+      distractionTime: distractionTimeRef.current,
       focusSessions: parseInt(localStorage.getItem('todayFocusSessions') || '0'),
       lastUpdate: new Date().toISOString()
     };
 
     localStorage.setItem(`usage_${today}`, JSON.stringify(data));
-    
+
     // Also store in individual keys for backwards compatibility
     localStorage.setItem('todayFocusTime', focusTimeRef.current.toString());
     localStorage.setItem('todayScreenTime', activeTimeRef.current.toString());
     localStorage.setItem('todayTabSwitches', tabSwitchCountRef.current.toString());
     localStorage.setItem('todayDistractions', distractionCountRef.current.toString());
+    localStorage.setItem('todayDistractionTime', distractionTimeRef.current.toString());
   };
 
   const startFocusMode = () => {
