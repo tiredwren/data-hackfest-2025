@@ -4,69 +4,65 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Brain, Clock, TrendingUp, Calendar, Zap, Target, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useUsageTracking } from "@/hooks/useUsageTracking";
+import { useRealUsageStats } from "@/hooks/useRealUsageStats";
 import { UsageHeatmap } from "@/components/UsageHeatmap";
 import { FocusTrendsChart } from "@/components/FocusTrendsChart";
 import { DistractionPatterns } from "@/components/DistractionPatterns";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { geminiService } from "@/services/geminiService";
+import { toast } from "sonner";
 
 
 export default function PatternAnalysis() {
   const navigate = useNavigate();
-  const { usageStats } = useUsageTracking();
+  const today = new Date().toISOString().split('T')[0];
+  const { stats } = useRealUsageStats({
+    startDate: today,
+    endDate: today
+  });
 
   const [aiSummary, setAiSummary] = useState<string>('');
-  const [isGenerating, setIsGenerating] = useState(false);
-
-  const GEMINI_API_KEY = 'AIzaSyAYrAc8otSeBuUTLzuT_ZXl-vWHpe56Gfc';
+  const [aiInsights, setAiInsights] = useState<string>('');
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
 
   const generateAISummary = async () => {
-    if (!GEMINI_API_KEY) return;
+    if (!stats || !geminiService.isConfigured()) return;
 
-    setIsGenerating(true);
+    setIsGeneratingSummary(true);
     try {
-      const { GoogleGenerativeAI } = await import('@google/generative-ai');
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
-      const usageData = {
-        totalScreenTime: usageStats?.totalScreenTime || 0,
-        focusTime: usageStats?.focusTime || 0,
-        distractionTime: usageStats?.distractionTime || 0,
-        appSwitches: usageStats?.appSwitches || 0,
-        focusPercentage: usageStats ? Math.round((usageStats.focusTime / usageStats.totalScreenTime) * 100) : 0
-      };
-
-      const prompt = `Analyze this phone usage data and create a natural, encouraging summary in 2-3 sentences:
-
-        Total screen time: ${Math.round(usageData.totalScreenTime / (1000 * 60))} minutes
-        Focus time: ${Math.round(usageData.focusTime / (1000 * 60))} minutes
-        Distraction time: ${Math.round(usageData.distractionTime / (1000 * 60))} minutes
-        App switches: ${usageData.appSwitches}
-        Focus percentage: ${usageData.focusPercentage}%
-
-        Include:
-        - Main focus periods and strongest streaks
-        - Primary distraction sources
-        - Comparison to typical usage (make up reasonable comparison)
-        - Actionable suggestion for tomorrow
-
-        Keep it personal, encouraging, and under 100 words. Write like a helpful AI coach.`;
-
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      setAiSummary(response.text());
+      const summary = await geminiService.generateFocusTip();
+      setAiSummary(summary);
+      toast.success("Daily summary generated!");
     } catch (error) {
       console.error('Error generating AI summary:', error);
       setAiSummary('Unable to generate summary. Please try again later.');
+      toast.error("Failed to generate summary");
     }
-    setIsGenerating(false);
+    setIsGeneratingSummary(false);
   };
 
-  // Generate on first load
+  const generateAIInsights = async () => {
+    if (!stats || !geminiService.isConfigured()) return;
+
+    setIsGeneratingInsights(true);
+    try {
+      const insights = await geminiService.analyzeUsagePatterns(stats);
+      setAiInsights(insights);
+      toast.success("AI insights generated!");
+    } catch (error) {
+      console.error('Error generating AI insights:', error);
+      setAiInsights('Unable to generate insights. Please try again later.');
+      toast.error("Failed to generate insights");
+    }
+    setIsGeneratingInsights(false);
+  };
+
+  // Generate summary on first load
   useEffect(() => {
-    if (usageStats) generateAISummary();
-  }, [usageStats]);
+    if (stats && geminiService.isConfigured()) {
+      generateAISummary();
+    }
+  }, [stats]);
 
   return (
     <div className="min-h-screen bg-background p-4">
@@ -95,13 +91,13 @@ export default function PatternAnalysis() {
             </CardTitle>
             <Button
               onClick={generateAISummary}
-              disabled={isGenerating}
+              disabled={isGeneratingSummary || !geminiService.isConfigured()}
               size="sm"
               variant="ghost"
               className="text-sm gap-1"
             >
-              <RefreshCw className="h-4 w-4" />
-              Refresh
+              <RefreshCw className={`h-4 w-4 ${isGeneratingSummary ? 'animate-spin' : ''}`} />
+              {isGeneratingSummary ? 'Generating...' : 'Refresh'}
             </Button>
           </div>
         </CardHeader>
@@ -111,7 +107,18 @@ export default function PatternAnalysis() {
               <p className="text-foreground leading-relaxed">{aiSummary}</p>
             </div>
           ) : (
-            <p className="text-muted-foreground">Loading your daily summary...</p>
+            <div className="text-muted-foreground">
+              {!geminiService.isConfigured() ? (
+                <div>
+                  <p>🤖 Enable AI insights by adding your Gemini API key:</p>
+                  <p className="mt-2 font-mono text-xs bg-muted p-2 rounded">
+                    Add VITE_GEMINI_API_KEY to your environment variables
+                  </p>
+                </div>
+              ) : (
+                "Loading your daily summary..."
+              )}
+            </div>
           )}
         </CardContent>
       </Card>
