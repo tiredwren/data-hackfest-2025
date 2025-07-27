@@ -187,7 +187,7 @@ export default function Dashboard() {
           title="Tab Switches"
           value={isLoading ? "Loading..." : (stats ? stats.appSwitches.toString() : "0")}
           description={isLoading ? "Loading..." : (stats && stats.appSwitches > 20 ? "Higher than optimal" : "Good focus discipline")}
-          variant={stats && stats.appSwitches > 20 ? "warning" : "calm"}
+          variant={!isLoading && stats && stats.appSwitches > 20 ? "warning" : "calm"}
           icon={<Smartphone className="h-4 w-4" />}
         />
 
