@@ -427,6 +427,31 @@ export default function PomodoroTimer() {
         </TabsContent>
       </Tabs>
 
+      {/* Music Selection */}
+      <div className="w-full max-w-sm mb-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Music className="h-4 w-4" />
+          <span className="text-sm font-medium">Background Music</span>
+        </div>
+        <Select value={selectedMusic} onValueChange={setSelectedMusic}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select music type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">No Music</SelectItem>
+            <SelectItem value="lofi">Lo-fi</SelectItem>
+            <SelectItem value="classical">Classical Piano</SelectItem>
+            <SelectItem value="jazz">Jazz</SelectItem>
+          </SelectContent>
+        </Select>
+        {isMusicPlaying && (
+          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+            <Music className="h-3 w-3" />
+            Playing {selectedMusic} music
+          </p>
+        )}
+      </div>
+
       {/* Timer Card */}
       <Card className="w-full max-w-sm">
         <CardContent className="py-10 flex flex-col items-center">
