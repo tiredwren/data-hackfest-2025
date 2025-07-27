@@ -63,7 +63,7 @@ export default function PatternAnalysis() {
       console.error('Error generating AI insights:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
-        setAiInsights('⚠️ Daily AI usage limit reached. Insights will be available tomorrow!\n\nIn the meantime, review your patterns manually using the charts above.');
+        setAiInsights('��️ Daily AI usage limit reached. Insights will be available tomorrow!\n\nIn the meantime, review your patterns manually using the charts above.');
         toast.error("Daily AI limit reached");
       } else {
         setAiInsights('🤖 AI insights temporarily unavailable. You can still analyze your patterns using the visualizations above!\n\nTry refreshing in a few minutes or check your internet connection.');
@@ -295,7 +295,7 @@ export default function PatternAnalysis() {
               <div>
                 <p className="text-sm text-muted-foreground">Peak Focus Hour</p>
                 <p className="text-lg font-semibold">
-                  {stats?.totalFocusTime > 0 ? '9:00 - 11:00 AM' : 'No data yet'}
+                  {isLoading ? 'Loading...' : (stats?.totalFocusTime > 0 ? '9:00 - 11:00 AM' : 'No data yet')}
                 </p>
               </div>
             </div>
@@ -311,11 +311,11 @@ export default function PatternAnalysis() {
               <div>
                 <p className="text-sm text-muted-foreground">Most Distracting</p>
                 <p className="text-lg font-semibold">
-                  {stats?.activities?.find(activity =>
+                  {isLoading ? 'Loading...' : (stats?.activities?.find(activity =>
                     activity.title?.toLowerCase().includes('instagram') ||
                     activity.title?.toLowerCase().includes('tiktok') ||
                     activity.title?.toLowerCase().includes('facebook')
-                  )?.title || 'Social Media'}
+                  )?.title || 'Social Media')}
                 </p>
               </div>
             </div>
@@ -331,10 +331,10 @@ export default function PatternAnalysis() {
               <div>
                 <p className="text-sm text-muted-foreground">Avg Session</p>
                 <p className="text-lg font-semibold">
-                  {stats?.activities?.length > 0
+                  {isLoading ? 'Loading...' : (stats?.activities?.length > 0
                     ? `${Math.round(stats.totalScreenTime / (stats.activities.length * 1000 * 60))} min`
                     : 'No data'
-                  }
+                  )}
                 </p>
               </div>
             </div>
