@@ -18,7 +18,16 @@ cd data-hackfest-2025
 # Step 3: Install the necessary dependencies.
 npm i
 
-# Step 4: Start the development server
+# Step 4: Configure environment variables (optional)
+# Copy the environment template and add your API keys
+cp .env.example .env
+# Then edit .env and add your Gemini API key for AI features
+
+# Step 5: Start the development server
+# For web development:
+npm run dev
+
+# For mobile (Android):
 npm run build
 npx cap sync
 npx cap run android
