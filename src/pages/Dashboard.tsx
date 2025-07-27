@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useActivityTracking } from "@/hooks/useActivityTracking";
 import { useRealUsageStats } from "@/hooks/useRealUsageStats";
 import { useNotifications } from "@/hooks/useNotifications";
+import { geminiService } from "@/services/geminiService";
 import { toast } from "sonner";
 
 export default function Dashboard() {
