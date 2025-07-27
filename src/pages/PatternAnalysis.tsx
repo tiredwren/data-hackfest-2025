@@ -220,7 +220,7 @@ export default function PatternAnalysis() {
               <div>
                 <p className="text-sm text-muted-foreground">Peak Focus Hour</p>
                 <p className="text-lg font-semibold">
-                  {usageStats?.focusTime > 0 ? '9:00 - 11:00 AM' : 'No data yet'}
+                  {stats?.totalFocusTime > 0 ? '9:00 - 11:00 AM' : 'No data yet'}
                 </p>
               </div>
             </div>
@@ -236,11 +236,11 @@ export default function PatternAnalysis() {
               <div>
                 <p className="text-sm text-muted-foreground">Most Distracting</p>
                 <p className="text-lg font-semibold">
-                  {usageStats?.apps?.find(app => 
-                    app.packageName.includes('instagram') || 
-                    app.packageName.includes('tiktok') ||
-                    app.packageName.includes('facebook')
-                  )?.appName || 'Social Media'}
+                  {stats?.activities?.find(activity =>
+                    activity.title?.toLowerCase().includes('instagram') ||
+                    activity.title?.toLowerCase().includes('tiktok') ||
+                    activity.title?.toLowerCase().includes('facebook')
+                  )?.title || 'Social Media'}
                 </p>
               </div>
             </div>
@@ -256,8 +256,8 @@ export default function PatternAnalysis() {
               <div>
                 <p className="text-sm text-muted-foreground">Avg Session</p>
                 <p className="text-lg font-semibold">
-                  {usageStats?.apps?.length > 0 
-                    ? `${Math.round(usageStats.totalScreenTime / (usageStats.apps.length * 1000 * 60))} min`
+                  {stats?.activities?.length > 0
+                    ? `${Math.round(stats.totalScreenTime / (stats.activities.length * 1000 * 60))} min`
                     : 'No data'
                   }
                 </p>
