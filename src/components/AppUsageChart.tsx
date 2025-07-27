@@ -96,36 +96,44 @@ export function AppUsageChart() {
         <CardTitle className="text-lg">Today's App Usage</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-            <XAxis 
-              dataKey="name" 
-              fontSize={12}
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis hide />
-            <Bar dataKey="minutes" radius={[4, 4, 0, 0]}>
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={getBarColor(entry.type)} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-        <div className="flex items-center justify-center gap-6 mt-4">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-focus"></div>
-            <span className="text-sm text-muted-foreground">Focus Apps</span>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-[200px] text-muted-foreground">
+            <p>Loading...</p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-warning"></div>
-            <span className="text-sm text-muted-foreground">Distracting</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-calm"></div>
-            <span className="text-sm text-muted-foreground">Neutral</span>
-          </div>
-        </div>
+        ) : (
+          <>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                <XAxis
+                  dataKey="name"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis hide />
+                <Bar dataKey="minutes" radius={[4, 4, 0, 0]}>
+                  {data.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={getBarColor(entry.type)} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="flex items-center justify-center gap-6 mt-4">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-focus"></div>
+                <span className="text-sm text-muted-foreground">Focus Apps</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-warning"></div>
+                <span className="text-sm text-muted-foreground">Distracting</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-calm"></div>
+                <span className="text-sm text-muted-foreground">Neutral</span>
+              </div>
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );
