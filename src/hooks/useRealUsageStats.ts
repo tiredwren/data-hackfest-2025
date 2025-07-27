@@ -25,11 +25,18 @@ export const useRealUsageStats = (dateRange: { startDate: string; endDate: strin
   const getLocalStats = (): RealUsageStats => {
     const localData = getCurrentStats();
 
+    // Calculate distraction time more accurately
+    // If we have focus time, distraction time is screen time - focus time
+    // Otherwise, use a more conservative estimate
+    const calculatedDistractionTime = localData.screenTime > localData.focusTime
+      ? localData.screenTime - localData.focusTime
+      : Math.min(localData.distractions * 15000, localData.screenTime * 0.8); // Max 80% of screen time
+
     return {
       totalFocusTime: localData.focusTime,
       totalScreenTime: localData.screenTime,
       appSwitches: localData.tabSwitches,
-      distractionTime: localData.distractions * 30000, // 30 seconds per distraction
+      distractionTime: calculatedDistractionTime,
       sessionCount: localData.focusSessions,
       distractionCount: localData.distractions,
       activities: [],
