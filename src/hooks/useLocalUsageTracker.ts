@@ -24,13 +24,14 @@ export const useLocalUsageTracker = () => {
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
     const storedData = localStorage.getItem(`usage_${today}`);
-    
+
     if (storedData) {
       const data: LocalUsageData = JSON.parse(storedData);
       activeTimeRef.current = data.screenTime;
       focusTimeRef.current = data.focusTime;
       tabSwitchCountRef.current = data.tabSwitches;
       distractionCountRef.current = data.distractions;
+      distractionTimeRef.current = data.distractionTime || 0;
     }
   }, []);
 
