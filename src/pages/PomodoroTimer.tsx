@@ -107,49 +107,50 @@ export default function PomodoroTimer() {
     if (selectedMusic === "none" || isMusicPlaying) return;
 
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      audioContextRef.current = audioContext;
+      const musicUrl = getMusicUrl(selectedMusic);
+      if (!musicUrl) return;
 
-      let musicNodes;
-      switch (selectedMusic) {
-        case "lofi":
-          musicNodes = createLofiMusic(audioContext);
-          break;
-        case "classical":
-          musicNodes = createClassicalMusic(audioContext);
-          break;
-        case "jazz":
-          musicNodes = createJazzMusic(audioContext);
-          break;
-        default:
-          return;
-      }
+      const audio = new Audio(musicUrl);
+      audio.loop = true;
+      audio.volume = 0.3;
+      audio.crossOrigin = "anonymous"; // Handle CORS issues
 
-      musicNodesRef.current = musicNodes;
-      setIsMusicPlaying(true);
+      // Handle potential loading issues
+      audio.addEventListener('canplaythrough', () => {
+        audio.play().then(() => {
+          setIsMusicPlaying(true);
+        }).catch((error) => {
+          console.warn("Could not play background music:", error);
+          toast({
+            title: "Music Unavailable",
+            description: "Background music couldn't load. Continuing without music.",
+            variant: "destructive"
+          });
+        });
+      });
+
+      audio.addEventListener('error', (e) => {
+        console.warn("Audio loading error:", e);
+        toast({
+          title: "Music Unavailable",
+          description: "Background music couldn't load. Continuing without music.",
+          variant: "destructive"
+        });
+      });
+
+      audioRef.current = audio;
     } catch (error) {
       console.warn("Could not start background music:", error);
     }
   };
 
   const stopMusic = () => {
-    if (!isMusicPlaying || !musicNodesRef.current.oscillators.length) return;
+    if (!isMusicPlaying || !audioRef.current) return;
 
     try {
-      musicNodesRef.current.oscillators.forEach(osc => {
-        try {
-          osc.stop();
-        } catch (e) {
-          // Oscillator may already be stopped
-        }
-      });
-
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-        audioContextRef.current = null;
-      }
-
-      musicNodesRef.current = { oscillators: [], gainNode: null };
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
       setIsMusicPlaying(false);
     } catch (error) {
       console.warn("Could not stop background music:", error);
