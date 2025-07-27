@@ -21,26 +21,30 @@ export default function PatternAnalysis() {
   });
 
   const [aiSummary, setAiSummary] = useState<string>('');
+  const [suggestion, setSuggestion] = useState<string | null>(null);
   const [aiInsights, setAiInsights] = useState<string>('');
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
 
   const generateAISummary = async () => {
-    if (!stats || !geminiService.isConfigured()) return;
+    if (!stats) return;
 
     setIsGeneratingSummary(true);
     try {
-      const summary = await geminiService.generateFocusTip();
-      setAiSummary(summary);
+      const result = await geminiService.generateDailySummary(stats);
+      setAiSummary(result.summary);
+      setSuggestion(result.suggestion);
       toast.success("Daily summary generated!");
     } catch (error) {
       console.error('Error generating AI summary:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
         setAiSummary('⚠️ Daily AI usage limit reached. Summary will be available tomorrow!');
+        setSuggestion(null);
         toast.error("Daily AI limit reached");
       } else {
         setAiSummary('🤖 AI summary temporarily unavailable. Your focus tracking continues!');
+        setSuggestion(null);
         toast.error("AI service temporarily unavailable");
       }
     }
@@ -71,10 +75,31 @@ export default function PatternAnalysis() {
 
   // Generate summary on first load
   useEffect(() => {
-    if (stats && geminiService.isConfigured()) {
+    if (stats) {
       generateAISummary();
     }
   }, [stats]);
+
+  const formatSummaryText = (text: string) => {
+    // Remove ** formatting and convert to proper heading if needed
+    const cleanedText = text.replace(/\*\*(.*?)\*\*/g, '$1');
+
+    // Split by sentences and format if there are headings
+    const sentences = cleanedText.split(/(?<=[.!?])\s+/);
+
+    return sentences.map((sentence, index) => {
+      // If sentence looks like a heading (short, at start, etc.)
+      if (index === 0 && sentence.length < 50 && !sentence.includes('.')) {
+        return <h2 key={index} className="text-lg font-semibold mb-2">{sentence}</h2>;
+      }
+      return <span key={index}>{sentence}{index < sentences.length - 1 ? ' ' : ''}</span>;
+    });
+  };
+
+  const handleAcceptSuggestion = () => {
+    toast.success("Great! We'll help you implement this tomorrow.");
+    setSuggestion(null);
+  };
 
   return (
     <div className="min-h-screen bg-background p-4">
@@ -103,7 +128,7 @@ export default function PatternAnalysis() {
             </CardTitle>
             <Button
               onClick={generateAISummary}
-              disabled={isGeneratingSummary || !geminiService.isConfigured()}
+              disabled={isGeneratingSummary}
               size="sm"
               variant="ghost"
               className="text-sm gap-1"
@@ -115,8 +140,35 @@ export default function PatternAnalysis() {
         </CardHeader>
         <CardContent>
           {aiSummary ? (
-            <div className="bg-focus/10 border border-focus/20 rounded-lg p-4">
-              <p className="text-foreground leading-relaxed">{aiSummary}</p>
+            <div className="space-y-4">
+              <div className="bg-focus/10 border border-focus/20 rounded-lg p-4">
+                <div className="text-foreground leading-relaxed">
+                  {formatSummaryText(aiSummary)}
+                </div>
+              </div>
+              {suggestion && (
+                <div className="flex items-center justify-between bg-muted/50 border rounded-lg p-4">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground mb-1">Suggested action:</p>
+                    <p className="text-sm text-muted-foreground capitalize">{suggestion}</p>
+                  </div>
+                  <div className="flex gap-2 ml-4">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setSuggestion(null)}
+                    >
+                      Maybe later
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleAcceptSuggestion}
+                    >
+                      Yes, do this
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-muted-foreground">
