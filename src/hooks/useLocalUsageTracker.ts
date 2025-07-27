@@ -61,11 +61,10 @@ export const useLocalUsageTracker = () => {
           if (isQuickSwitch) {
             // Quick switch penalty: 3 minutes
             distractionCountRef.current += 1;
-            // Add extra distraction time for quick switches
-            activeTimeRef.current += baseDistraction * 1.5; // 3 minutes penalty
+            distractionTimeRef.current += baseDistraction * 1.5; // 3 minutes penalty
           } else {
             // Regular switch penalty: 2 minutes
-            activeTimeRef.current += baseDistraction;
+            distractionTimeRef.current += baseDistraction;
           }
         }
         setIsActive(wasActive);
