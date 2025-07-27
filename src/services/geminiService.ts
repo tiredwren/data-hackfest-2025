@@ -54,10 +54,25 @@ class GeminiService {
     try {
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
-      return response.text();
+      const text = response.text();
+      if (!text || text.trim().length === 0) {
+        throw new Error('Empty response from Gemini API');
+      }
+      return text;
     } catch (error) {
       console.error('Gemini API error:', error);
-      return "Unable to generate AI insights at this time. Please try again later.";
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      // Provide more specific error messages based on the error type
+      if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
+        return "⚠️ Daily usage limit reached. AI insights will resume tomorrow. You can still track your focus manually!";
+      } else if (errorMessage.includes('key') || errorMessage.includes('auth')) {
+        return "🔑 API key issue detected. Please check your Gemini API key configuration.";
+      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+        return "🌐 Connection issue. Check your internet connection and try again.";
+      } else {
+        return "🤖 AI insights temporarily unavailable. Your usage tracking continues normally!";
+      }
     }
   }
 
@@ -80,15 +95,25 @@ class GeminiService {
     try {
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
-      return response.text();
+      const text = response.text();
+      if (!text || text.trim().length === 0) {
+        throw new Error('Empty response from Gemini API');
+      }
+      return text;
     } catch (error) {
       console.error('Gemini API error:', error);
+      // Enhanced fallback tips with more variety
       const fallbackTips = [
         "💡 Tip: Use the 2-minute rule - if a task takes less than 2 minutes, do it immediately.",
         "🎯 Tip: Try time-blocking - assign specific time slots to different activities.",
         "🔕 Tip: Turn off non-essential notifications during focus sessions.",
         "🌱 Tip: Take regular breaks to maintain mental energy throughout the day.",
-        "📝 Tip: Keep a distraction list - write down random thoughts to address later."
+        "📝 Tip: Keep a distraction list - write down random thoughts to address later.",
+        "⏰ Tip: Use the Pomodoro Technique - 25 minutes of focused work followed by 5-minute breaks.",
+        "🎧 Tip: Try background music or white noise to improve concentration.",
+        "🧘 Tip: Start each work session with 2 minutes of deep breathing to center yourself.",
+        "📱 Tip: Put your phone in another room or use airplane mode during deep work.",
+        "🎨 Tip: Batch similar tasks together to minimize context switching."
       ];
       return fallbackTips[Math.floor(Math.random() * fallbackTips.length)];
     }
@@ -113,7 +138,11 @@ class GeminiService {
     try {
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
-      return response.text();
+      const text = response.text();
+      if (!text || text.trim().length === 0) {
+        throw new Error('Empty response from Gemini API');
+      }
+      return text;
     } catch (error) {
       console.error('Gemini API error:', error);
       const fallbackActivities = [
@@ -121,7 +150,12 @@ class GeminiService {
         "💧 Drink a glass of water and do some neck rolls.",
         "👁️ Look out the window and focus on distant objects for eye relief.",
         "🧘 Try 5 minutes of deep breathing or meditation.",
-        "🚶 Take a short walk around your space or building."
+        "🚶 Take a short walk around your space or building.",
+        "🙆 Do some shoulder shrugs and arm circles to release tension.",
+        "☕ Make a healthy snack or herbal tea mindfully.",
+        "📖 Read a few pages of an inspiring book.",
+        "🌱 Do some light desk exercises or yoga poses.",
+        "🎵 Listen to a calming song and practice gratitude."
       ];
       return fallbackActivities[Math.floor(Math.random() * fallbackActivities.length)];
     }
