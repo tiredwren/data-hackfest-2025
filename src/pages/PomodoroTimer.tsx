@@ -144,6 +144,30 @@ export default function PomodoroTimer() {
     }
   };
 
+  const pauseMusic = () => {
+    if (!isMusicPlaying || !audioRef.current) return;
+
+    try {
+      audioRef.current.pause();
+    } catch (error) {
+      console.warn("Could not pause background music:", error);
+    }
+  };
+
+  const resumeMusic = () => {
+    if (!audioRef.current || isMusicPlaying) return;
+
+    try {
+      audioRef.current.play().then(() => {
+        // Music resumed successfully
+      }).catch((error) => {
+        console.warn("Could not resume background music:", error);
+      });
+    } catch (error) {
+      console.warn("Could not resume background music:", error);
+    }
+  };
+
   const stopMusic = () => {
     if (!isMusicPlaying || !audioRef.current) return;
 
