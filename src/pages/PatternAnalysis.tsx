@@ -75,20 +75,36 @@ export default function PatternAnalysis() {
 
 
 
-  const formatSummaryText = (text: string) => {
-    // Remove ** formatting and convert to proper heading if needed
-    const cleanedText = text.replace(/\*\*(.*?)\*\*/g, '$1');
+  const formatAIText = (text: string) => {
+    // Split text into lines
+    const lines = text.split('\n').filter(line => line.trim());
 
-    // Split by sentences and format if there are headings
-    const sentences = cleanedText.split(/(?<=[.!?])\s+/);
+    return lines.map((line, index) => {
+      const trimmedLine = line.trim();
 
-    return sentences.map((sentence, index) => {
-      // If sentence looks like a heading (short, at start, etc.)
-      if (index === 0 && sentence.length < 50 && !sentence.includes('.')) {
-        return <h2 key={index} className="text-lg font-semibold mb-2">{sentence}</h2>;
+      // Convert text surrounded by ** to headings
+      if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
+        const headingText = trimmedLine.replace(/\*\*/g, '');
+        return <h2 key={index} className="text-lg font-semibold mb-2 mt-4">{headingText}</h2>;
       }
-      return <span key={index}>{sentence}{index < sentences.length - 1 ? ' ' : ''}</span>;
-    });
+
+      // Handle lines that contain ** formatting
+      const formattedLine = trimmedLine.replace(/\*\*(.*?)\*\*/g, (match, content) => {
+        return content; // Remove ** but keep content for inline headings
+      });
+
+      // If line looks like a heading after ** removal (short, no punctuation at end)
+      if (formattedLine !== trimmedLine && formattedLine.length < 50 && !formattedLine.match(/[.!?]$/)) {
+        return <h2 key={index} className="text-lg font-semibold mb-2 mt-4">{formattedLine}</h2>;
+      }
+
+      // Regular paragraph
+      if (formattedLine) {
+        return <p key={index} className="mb-2">{formattedLine}</p>;
+      }
+
+      return null;
+    }).filter(Boolean);
   };
 
   const handleAcceptSuggestion = () => {
