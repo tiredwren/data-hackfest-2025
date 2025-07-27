@@ -79,96 +79,28 @@ export default function PomodoroTimer() {
     }
   };
 
-  // Music generation functions
-  const createLofiMusic = (audioContext: AudioContext) => {
-    const gainNode = audioContext.createGain();
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-    gainNode.connect(audioContext.destination);
-
-    const oscillators: OscillatorNode[] = [];
-
-    // Create multiple oscillators for a lofi sound
-    const frequencies = [220, 330, 440, 550]; // A3, E4, A4, C#5
-
-    frequencies.forEach((freq, index) => {
-      const osc = audioContext.createOscillator();
-      const oscGain = audioContext.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, audioContext.currentTime);
-      oscGain.gain.setValueAtTime(0.025, audioContext.currentTime);
-
-      osc.connect(oscGain);
-      oscGain.connect(gainNode);
-
-      osc.start();
-      oscillators.push(osc);
-
-      // Add slight frequency modulation for warmth
-      setTimeout(() => {
-        if (osc.frequency) {
-          osc.frequency.setValueAtTime(freq + Math.sin(Date.now() / 1000) * 2, audioContext.currentTime);
-        }
-      }, index * 500);
-    });
-
-    return { oscillators, gainNode };
+  // Music track URLs - using royalty-free music from various sources
+  const musicTracks = {
+    lofi: "https://www.soundjay.com/misc/sounds/clock-ticking-5.mp3", // Placeholder - will be replaced with actual lo-fi track
+    classical: "https://www.soundjay.com/misc/sounds/clock-ticking-4.mp3", // Placeholder - will be replaced with classical track
+    jazz: "https://www.soundjay.com/misc/sounds/clock-ticking-3.mp3" // Placeholder - will be replaced with jazz track
   };
 
-  const createClassicalMusic = (audioContext: AudioContext) => {
-    const gainNode = audioContext.createGain();
-    gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
-    gainNode.connect(audioContext.destination);
-
-    const oscillators: OscillatorNode[] = [];
-
-    // Classical piano-like frequencies (C major scale)
-    const frequencies = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
-
-    frequencies.forEach((freq, index) => {
-      const osc = audioContext.createOscillator();
-      const oscGain = audioContext.createGain();
-
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, audioContext.currentTime);
-      oscGain.gain.setValueAtTime(0.03, audioContext.currentTime);
-
-      osc.connect(oscGain);
-      oscGain.connect(gainNode);
-
-      osc.start();
-      oscillators.push(osc);
-    });
-
-    return { oscillators, gainNode };
-  };
-
-  const createJazzMusic = (audioContext: AudioContext) => {
-    const gainNode = audioContext.createGain();
-    gainNode.gain.setValueAtTime(0.09, audioContext.currentTime);
-    gainNode.connect(audioContext.destination);
-
-    const oscillators: OscillatorNode[] = [];
-
-    // Jazz chord frequencies (Dm7)
-    const frequencies = [293.66, 349.23, 415.30, 523.25]; // D4, F4, Ab4, C5
-
-    frequencies.forEach((freq, index) => {
-      const osc = audioContext.createOscillator();
-      const oscGain = audioContext.createGain();
-
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(freq, audioContext.currentTime);
-      oscGain.gain.setValueAtTime(0.025, audioContext.currentTime);
-
-      osc.connect(oscGain);
-      oscGain.connect(gainNode);
-
-      osc.start();
-      oscillators.push(osc);
-    });
-
-    return { oscillators, gainNode };
+  // Better royalty-free music sources
+  const getMusicUrl = (type: string) => {
+    switch (type) {
+      case "lofi":
+        // Using a longer lo-fi track from a royalty-free source
+        return "https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3"; // Calm lo-fi background music
+      case "classical":
+        // Classical piano piece from Pixabay (royalty-free)
+        return "https://cdn.pixabay.com/audio/2022/03/10/audio_4621777957.mp3"; // Classical piano
+      case "jazz":
+        // Jazz background from Pixabay (royalty-free)
+        return "https://cdn.pixabay.com/audio/2021/08/04/audio_12b0c7443c.mp3"; // Smooth jazz
+      default:
+        return "";
+    }
   };
 
   const startMusic = () => {
