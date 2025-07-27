@@ -47,10 +47,22 @@ export const useLocalUsageTracker = () => {
           // User switched away - count as tab switch
           tabSwitchCountRef.current += 1;
 
-          // Check if it's a distraction (based on simple heuristics)
+          // Every tab switch adds to distraction time
+          // Base distraction penalty: 2 minutes per switch
+          const baseDistraction = 2 * 60 * 1000; // 2 minutes in milliseconds
+
+          // Quick switches (less than 30 seconds) are more distracting
           const timeSinceLastSwitch = now - lastVisibilityChange;
-          if (timeSinceLastSwitch < 30000) { // Less than 30 seconds = quick switch = potential distraction
+          const isQuickSwitch = timeSinceLastSwitch < 30000;
+
+          if (isQuickSwitch) {
+            // Quick switch penalty: 3 minutes
             distractionCountRef.current += 1;
+            // Add extra distraction time for quick switches
+            activeTimeRef.current += baseDistraction * 1.5; // 3 minutes penalty
+          } else {
+            // Regular switch penalty: 2 minutes
+            activeTimeRef.current += baseDistraction;
           }
         }
         setIsActive(wasActive);
