@@ -34,46 +34,52 @@ export function FocusTrendsChart() {
   }, [usageStats]);
   return (
     <div className="h-64">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-          <XAxis 
-            dataKey="day" 
-            axisLine={false}
-            tickLine={false}
-            className="text-xs fill-muted-foreground"
-          />
-          <YAxis 
-            axisLine={false}
-            tickLine={false}
-            className="text-xs fill-muted-foreground"
-          />
-          <Tooltip 
-            contentStyle={{ 
-              backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '8px',
-              fontSize: '12px'
-            }}
-          />
-          <Line 
-            type="monotone" 
-            dataKey="focus" 
-            stroke="hsl(var(--focus))" 
-            strokeWidth={3}
-            dot={{ fill: 'hsl(var(--focus))', strokeWidth: 2, r: 4 }}
-            name="Focus Time %"
-          />
-          <Line 
-            type="monotone" 
-            dataKey="distraction" 
-            stroke="hsl(var(--warning))" 
-            strokeWidth={3}
-            dot={{ fill: 'hsl(var(--warning))', strokeWidth: 2, r: 4 }}
-            name="Distraction Time %"
-          />
-        </LineChart>
-      </ResponsiveContainer>
+      {isLoading ? (
+        <div className="flex items-center justify-center h-full text-muted-foreground">
+          <p>Loading...</p>
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+            <XAxis
+              dataKey="day"
+              axisLine={false}
+              tickLine={false}
+              className="text-xs fill-muted-foreground"
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              className="text-xs fill-muted-foreground"
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+                fontSize: '12px'
+              }}
+            />
+            <Line
+              type="monotone"
+              dataKey="focus"
+              stroke="hsl(var(--focus))"
+              strokeWidth={3}
+              dot={{ fill: 'hsl(var(--focus))', strokeWidth: 2, r: 4 }}
+              name="Focus Time %"
+            />
+            <Line
+              type="monotone"
+              dataKey="distraction"
+              stroke="hsl(var(--warning))"
+              strokeWidth={3}
+              dot={{ fill: 'hsl(var(--warning))', strokeWidth: 2, r: 4 }}
+              name="Distraction Time %"
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      )}
     </div>
   );
 }
