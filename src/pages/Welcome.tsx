@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Smartphone, Target, Brain, Zap, Shield, BarChart3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import LoginButton from "@/components/LoginButton";
+import LogoutButton from "@/components/LogoutButton";
 
 export default function Welcome() {
   const navigate = useNavigate();
@@ -78,14 +80,7 @@ export default function Welcome() {
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <Button 
-              size="lg" 
-              className="bg-focus hover:bg-focus/90 text-focus-foreground"
-              onClick={() => navigate('/dashboard')}
-            >
-              <Target className="mr-2 h-5 w-5" />
-              Get Started
-            </Button>
+            <LoginButton />
             <p className="text-sm text-muted-foreground">
               Requires Android device with usage access permissions
             </p>
