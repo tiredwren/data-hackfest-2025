@@ -82,6 +82,30 @@ export default function Dashboard() {
     navigate('/pomodoro');
   };
 
+  const generateAIInsights = async () => {
+    if (!stats) return;
+
+    setIsGeneratingInsights(true);
+    try {
+      const insights = await geminiService.analyzeUsagePatterns(stats);
+      setAiInsights(insights);
+      toast.success("AI insights generated!");
+    } catch (error) {
+      toast.error("Failed to generate AI insights");
+    } finally {
+      setIsGeneratingInsights(false);
+    }
+  };
+
+  const generateFocusTip = async () => {
+    try {
+      const tip = await geminiService.generateFocusTip();
+      setFocusTip(tip);
+    } catch (error) {
+      console.error("Failed to generate focus tip:", error);
+    }
+  };
+
   const formatTime = (milliseconds: number) => {
     const totalSeconds = Math.floor(milliseconds / 1000);
     const hours = Math.floor(totalSeconds / 3600);
