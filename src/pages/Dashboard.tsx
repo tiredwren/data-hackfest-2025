@@ -264,7 +264,7 @@ export default function Dashboard() {
             <div className="space-y-3">
               {isLoading ? (
                 <div className="text-center text-muted-foreground">
-                  <p className="text-sm">Loading insights...</p>
+                  <p className="text-sm">Loading...</p>
                 </div>
               ) : stats ? (
                 <>
