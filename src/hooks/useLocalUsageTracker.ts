@@ -168,6 +168,7 @@ export const useLocalUsageTracker = () => {
       screenTime: activeTimeRef.current,
       tabSwitches: tabSwitchCountRef.current,
       distractions: distractionCountRef.current,
+      distractionTime: distractionTimeRef.current,
       focusSessions: parseInt(localStorage.getItem('todayFocusSessions') || '0')
     };
   };
