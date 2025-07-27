@@ -39,7 +39,6 @@ export default function PomodoroTimer() {
   const cycleLength = duration + breakDuration;
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const lastModeRef = useRef<"focus" | "break">("focus");
 
   const presets = [
@@ -48,10 +47,9 @@ export default function PomodoroTimer() {
     { label: "50/10", focus: 50 * 60, break: 10 * 60 },
   ];
 
-  // Initialize audio element
-  useEffect(() => {
-    // Create a simple ding sound using Web Audio API
-    const createDingSound = () => {
+  // Create beep sound using Web Audio API
+  const playBeepSound = () => {
+    try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
@@ -65,18 +63,13 @@ export default function PomodoroTimer() {
 
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.5);
-    };
-
-    audioRef.current = { play: createDingSound } as any;
-  }, []);
+    } catch (error) {
+      console.warn("Could not play beep sound:", error);
+    }
+  };
 
   useEffect(() => {
     LocalNotifications.requestPermissions();
-  }, []);
-
-  const dingSound = useRef<HTMLAudioElement | null>(null);
-  useEffect(() => {
-    dingSound.current = new Audio("/sounds/ding.mp3");
   }, []);
 
   // Timer logic
