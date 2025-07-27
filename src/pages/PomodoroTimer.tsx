@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pause, Play, RefreshCw, Timer } from "lucide-react";
+import { Pause, Play, RefreshCw, Timer, Music } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { App } from "@capacitor/app";
 import { LocalNotifications } from "@capacitor/local-notifications";
@@ -22,6 +22,13 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function PomodoroTimer() {
   const navigate = useNavigate();
@@ -34,6 +41,8 @@ export default function PomodoroTimer() {
   const [customFocus, setCustomFocus] = useState("25");
   const [customBreak, setCustomBreak] = useState("5");
   const [isCustomDialogOpen, setIsCustomDialogOpen] = useState(false);
+  const [selectedMusic, setSelectedMusic] = useState<string>("none");
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
 
   const cycles = 3;
   const totalTime = (duration + breakDuration) * cycles;
@@ -41,6 +50,11 @@ export default function PomodoroTimer() {
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastModeRef = useRef<"focus" | "break">("focus");
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const musicNodesRef = useRef<{
+    oscillators: OscillatorNode[];
+    gainNode: GainNode | null;
+  }>({ oscillators: [], gainNode: null });
 
   const presets = [
     { label: "0.2/0.05", focus: 5, break: 3 },
@@ -69,18 +83,174 @@ export default function PomodoroTimer() {
     }
   };
 
+  // Music generation functions
+  const createLofiMusic = (audioContext: AudioContext) => {
+    const gainNode = audioContext.createGain();
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.connect(audioContext.destination);
+
+    const oscillators: OscillatorNode[] = [];
+
+    // Create multiple oscillators for a lofi sound
+    const frequencies = [220, 330, 440, 550]; // A3, E4, A4, C#5
+
+    frequencies.forEach((freq, index) => {
+      const osc = audioContext.createOscillator();
+      const oscGain = audioContext.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+      oscGain.gain.setValueAtTime(0.025, audioContext.currentTime);
+
+      osc.connect(oscGain);
+      oscGain.connect(gainNode);
+
+      osc.start();
+      oscillators.push(osc);
+
+      // Add slight frequency modulation for warmth
+      setTimeout(() => {
+        if (osc.frequency) {
+          osc.frequency.setValueAtTime(freq + Math.sin(Date.now() / 1000) * 2, audioContext.currentTime);
+        }
+      }, index * 500);
+    });
+
+    return { oscillators, gainNode };
+  };
+
+  const createClassicalMusic = (audioContext: AudioContext) => {
+    const gainNode = audioContext.createGain();
+    gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
+    gainNode.connect(audioContext.destination);
+
+    const oscillators: OscillatorNode[] = [];
+
+    // Classical piano-like frequencies (C major scale)
+    const frequencies = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+
+    frequencies.forEach((freq, index) => {
+      const osc = audioContext.createOscillator();
+      const oscGain = audioContext.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+      oscGain.gain.setValueAtTime(0.03, audioContext.currentTime);
+
+      osc.connect(oscGain);
+      oscGain.connect(gainNode);
+
+      osc.start();
+      oscillators.push(osc);
+    });
+
+    return { oscillators, gainNode };
+  };
+
+  const createJazzMusic = (audioContext: AudioContext) => {
+    const gainNode = audioContext.createGain();
+    gainNode.gain.setValueAtTime(0.09, audioContext.currentTime);
+    gainNode.connect(audioContext.destination);
+
+    const oscillators: OscillatorNode[] = [];
+
+    // Jazz chord frequencies (Dm7)
+    const frequencies = [293.66, 349.23, 415.30, 523.25]; // D4, F4, Ab4, C5
+
+    frequencies.forEach((freq, index) => {
+      const osc = audioContext.createOscillator();
+      const oscGain = audioContext.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+      oscGain.gain.setValueAtTime(0.025, audioContext.currentTime);
+
+      osc.connect(oscGain);
+      oscGain.connect(gainNode);
+
+      osc.start();
+      oscillators.push(osc);
+    });
+
+    return { oscillators, gainNode };
+  };
+
+  const startMusic = () => {
+    if (selectedMusic === "none" || isMusicPlaying) return;
+
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioContextRef.current = audioContext;
+
+      let musicNodes;
+      switch (selectedMusic) {
+        case "lofi":
+          musicNodes = createLofiMusic(audioContext);
+          break;
+        case "classical":
+          musicNodes = createClassicalMusic(audioContext);
+          break;
+        case "jazz":
+          musicNodes = createJazzMusic(audioContext);
+          break;
+        default:
+          return;
+      }
+
+      musicNodesRef.current = musicNodes;
+      setIsMusicPlaying(true);
+    } catch (error) {
+      console.warn("Could not start background music:", error);
+    }
+  };
+
+  const stopMusic = () => {
+    if (!isMusicPlaying || !musicNodesRef.current.oscillators.length) return;
+
+    try {
+      musicNodesRef.current.oscillators.forEach(osc => {
+        try {
+          osc.stop();
+        } catch (e) {
+          // Oscillator may already be stopped
+        }
+      });
+
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+
+      musicNodesRef.current = { oscillators: [], gainNode: null };
+      setIsMusicPlaying(false);
+    } catch (error) {
+      console.warn("Could not stop background music:", error);
+    }
+  };
+
   useEffect(() => {
     LocalNotifications.requestPermissions();
+
+    // Cleanup music on unmount
+    return () => {
+      stopMusic();
+    };
   }, []);
 
   // Timer logic
   useEffect(() => {
     if (isRunning) {
+      // Start music when timer starts
+      if (selectedMusic !== "none" && !isMusicPlaying) {
+        startMusic();
+      }
+
       intervalRef.current = setInterval(() => {
         setElapsed((prev) => {
           if (prev + 1 >= totalTime) {
             clearInterval(intervalRef.current!);
-            // Play beep sound when session ends
+            // Stop music and play beep sound when session ends
+            stopMusic();
             playBeepSound();
             setIsRunning(false);
             toast({ title: "Pomodoro Complete", description: "3 cycles done!" });
@@ -91,9 +261,16 @@ export default function PomodoroTimer() {
       }, 1000);
     } else {
       clearInterval(intervalRef.current!);
+      // Stop music when timer is paused
+      if (isMusicPlaying) {
+        stopMusic();
+      }
     }
-    return () => clearInterval(intervalRef.current!);
-  }, [isRunning, totalTime]);
+    return () => {
+      clearInterval(intervalRef.current!);
+      stopMusic();
+    };
+  }, [isRunning, totalTime, selectedMusic]);
 
 
   // Calculate current phase and time left
@@ -164,8 +341,8 @@ export default function PomodoroTimer() {
     setDuration(focus);
     setBreakDuration(breakT);
     setElapsed(0);
-
     setIsRunning(false);
+    stopMusic();
   };
   const progressColor = mode === "focus" ? "bg-green-500" : "bg-purple-400";
 
@@ -249,6 +426,31 @@ export default function PomodoroTimer() {
           </Dialog>
         </TabsContent>
       </Tabs>
+
+      {/* Music Selection */}
+      <div className="w-full max-w-sm mb-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Music className="h-4 w-4" />
+          <span className="text-sm font-medium">Background Music</span>
+        </div>
+        <Select value={selectedMusic} onValueChange={setSelectedMusic}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select music type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">No Music</SelectItem>
+            <SelectItem value="lofi">Lo-fi</SelectItem>
+            <SelectItem value="classical">Classical Piano</SelectItem>
+            <SelectItem value="jazz">Jazz</SelectItem>
+          </SelectContent>
+        </Select>
+        {isMusicPlaying && (
+          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+            <Music className="h-3 w-3" />
+            Playing {selectedMusic} music
+          </p>
+        )}
+      </div>
 
       {/* Timer Card */}
       <Card className="w-full max-w-sm">
