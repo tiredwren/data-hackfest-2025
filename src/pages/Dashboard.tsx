@@ -30,9 +30,7 @@ export default function Dashboard() {
   
   const [focusSessionRunning, setFocusSessionRunning] = useState(false);
   const [focusRemaining, setFocusRemaining] = useState<number>(0);
-  const [aiInsights, setAiInsights] = useState<string>("");
 
-  const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
 
   useEffect(() => {
     requestNotificationPermission();
@@ -82,20 +80,7 @@ export default function Dashboard() {
     navigate('/pomodoro');
   };
 
-  const generateAIInsights = async () => {
-    if (!stats) return;
 
-    setIsGeneratingInsights(true);
-    try {
-      const insights = await geminiService.analyzeUsagePatterns(stats);
-      setAiInsights(insights);
-      toast.success("AI insights generated!");
-    } catch (error) {
-      toast.error("Failed to generate AI insights");
-    } finally {
-      setIsGeneratingInsights(false);
-    }
-  };
 
 
 
