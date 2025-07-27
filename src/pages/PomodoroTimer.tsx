@@ -190,16 +190,15 @@ export default function PomodoroTimer() {
       }, 1000);
     } else {
       clearInterval(intervalRef.current!);
-      // Stop music when timer is paused
-      if (isMusicPlaying) {
-        stopMusic();
+      // Pause music when timer is paused
+      if (isMusicPlaying && audioRef.current) {
+        audioRef.current.pause();
       }
     }
     return () => {
       clearInterval(intervalRef.current!);
-      stopMusic();
     };
-  }, [isRunning, totalTime, selectedMusic]);
+  }, [isRunning, totalTime, selectedMusic, isMusicPlaying]);
 
 
   // Calculate current phase and time left
