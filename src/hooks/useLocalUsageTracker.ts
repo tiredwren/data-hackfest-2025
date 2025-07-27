@@ -18,6 +18,7 @@ export const useLocalUsageTracker = () => {
   const lastActiveRef = useRef<number>(Date.now());
   const tabSwitchCountRef = useRef<number>(0);
   const distractionCountRef = useRef<number>(0);
+  const distractionTimeRef = useRef<number>(0);
 
   // Initialize data from localStorage
   useEffect(() => {
