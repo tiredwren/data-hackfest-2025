@@ -16,6 +16,9 @@ const queryClient = new QueryClient();
 const App = () => {
   const { isLoading, isAuthenticated } = useAuth0();
 
+  // Initialize local usage tracking
+  useLocalUsageTracker();
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
