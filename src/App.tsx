@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
+import { useLocalUsageTracker } from "./hooks/useLocalUsageTracker";
 import Welcome from "./pages/Welcome";
 import Dashboard from "./pages/Dashboard";
 import PatternAnalysis from "./pages/PatternAnalysis";
