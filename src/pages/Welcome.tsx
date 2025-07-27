@@ -2,10 +2,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Smartphone, Target, Brain, Zap, Shield, BarChart3 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 
 export default function Welcome() {
-  const navigate = useNavigate();
+  const { loginWithRedirect, isAuthenticated } = useAuth0();
+
+  const handleGetStarted = () => {
+    loginWithRedirect();
+  };
 
   const features = [
     {
@@ -81,7 +85,7 @@ export default function Welcome() {
             <Button 
               size="lg" 
               className="bg-focus hover:bg-focus/90 text-focus-foreground"
-              onClick={() => navigate('/dashboard')}
+              onClick={handleGetStarted}
             >
               <Target className="mr-2 h-5 w-5" />
               Get Started
