@@ -6,6 +6,7 @@ interface LocalUsageData {
   tabSwitches: number;
   distractions: number;
   focusSessions: number;
+  distractionTime: number;
   lastUpdate: string;
 }
 
