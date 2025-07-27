@@ -25,28 +25,23 @@ export const useRealUsageStats = (dateRange: { startDate: string; endDate: strin
   const getLocalStats = (): RealUsageStats => {
     const localData = getCurrentStats();
 
-    // Calculate distraction time based on multiple factors
-    // 1. Base distraction time from tab switches (2 minutes per switch)
-    const tabSwitchPenalty = localData.tabSwitches * 2 * 60 * 1000; // 2 minutes per switch
-
-    // 2. Additional penalty for quick switches (logged as distractions)
-    const quickSwitchPenalty = localData.distractions * 3 * 60 * 1000; // 3 minutes per quick switch
-
-    // 3. Time spent on non-focus activities
+    // Use the directly tracked distraction time from tab switches
+    // Plus add any non-focus time as additional distraction
+    const trackedDistractionTime = localData.distractionTime || 0;
     const nonFocusTime = Math.max(0, localData.screenTime - localData.focusTime);
 
-    // Total distraction time is the sum of penalties and non-focus time
-    // But cap it at 80% of total screen time to be realistic
-    const calculatedDistractionTime = Math.min(
-      tabSwitchPenalty + quickSwitchPenalty + nonFocusTime,
-      localData.screenTime * 0.8
+    // Total distraction time combines tracked penalties and non-focus time
+    // But avoid double counting - cap at screen time
+    const totalDistractionTime = Math.min(
+      trackedDistractionTime + (nonFocusTime * 0.5), // Only count 50% of non-focus as distraction
+      localData.screenTime
     );
 
     return {
       totalFocusTime: localData.focusTime,
       totalScreenTime: localData.screenTime,
       appSwitches: localData.tabSwitches,
-      distractionTime: Math.max(0, calculatedDistractionTime),
+      distractionTime: Math.max(0, totalDistractionTime),
       sessionCount: localData.focusSessions,
       distractionCount: localData.distractions,
       activities: [],
