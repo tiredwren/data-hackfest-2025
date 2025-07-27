@@ -154,7 +154,7 @@ export default function PatternAnalysis() {
             <div className="space-y-4">
               <div className="bg-focus/10 border border-focus/20 rounded-lg p-4">
                 <div className="text-foreground leading-relaxed">
-                  {formatSummaryText(aiSummary)}
+                  {formatAIText(aiSummary)}
                 </div>
               </div>
               {suggestion && (
