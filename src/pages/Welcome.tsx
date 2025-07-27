@@ -2,12 +2,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Smartphone, Target, Brain, Zap, Shield, BarChart3 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import LoginButton from "@/components/LoginButton";
-import LogoutButton from "@/components/LogoutButton";
+import { useAuth0 } from "@auth0/auth0-react";
 
 export default function Welcome() {
-  const navigate = useNavigate();
+  const { loginWithRedirect, isAuthenticated } = useAuth0();
+
+  const handleGetStarted = () => {
+    loginWithRedirect();
+  };
 
   const features = [
     {
@@ -80,7 +82,14 @@ export default function Welcome() {
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <LoginButton />
+            <Button 
+              size="lg" 
+              className="bg-focus hover:bg-focus/90 text-focus-foreground"
+              onClick={handleGetStarted}
+            >
+              <Target className="mr-2 h-5 w-5" />
+              Get Started
+            </Button>
             <p className="text-sm text-muted-foreground">
               Requires Android device with usage access permissions
             </p>

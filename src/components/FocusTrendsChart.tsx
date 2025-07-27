@@ -1,9 +1,15 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useUsageTracking } from '@/hooks/useUsageTracking';
+import { useRealUsageStats } from '@/hooks/useRealUsageStats';
 import { useMemo } from 'react';
 
 export function FocusTrendsChart() {
-  const { usageStats } = useUsageTracking();
+  const today = new Date().toISOString().split('T')[0];
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  
+  const { stats: usageStats } = useRealUsageStats({
+    startDate: weekAgo,
+    endDate: today
+  });
 
   const chartData = useMemo(() => {
     if (!usageStats) {
@@ -11,7 +17,7 @@ export function FocusTrendsChart() {
     }
 
     const totalTime = usageStats.totalScreenTime;
-    const focusPercentage = totalTime > 0 ? Math.round((usageStats.focusTime / totalTime) * 100) : 0;
+    const focusPercentage = totalTime > 0 ? Math.round((usageStats.totalFocusTime / totalTime) * 100) : 0;
     const distractionPercentage = totalTime > 0 ? Math.round((usageStats.distractionTime / totalTime) * 100) : 0;
 
     // Generate mock week data with today's actual data as the last point

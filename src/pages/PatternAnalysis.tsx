@@ -57,7 +57,7 @@ export default function PatternAnalysis() {
       const response = await result.response;
       setAiSummary(response.text());
     } catch (error) {
-      alert('Error generating AI summary:' + error.message);
+      console.error('Error generating AI summary:', error);
       setAiSummary('Unable to generate summary. Please try again later.');
     }
     setIsGenerating(false);
