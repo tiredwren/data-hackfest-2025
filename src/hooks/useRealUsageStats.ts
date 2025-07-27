@@ -25,25 +25,28 @@ export const useRealUsageStats = (dateRange: { startDate: string; endDate: strin
   const getLocalStats = (): RealUsageStats => {
     const localData = getCurrentStats();
 
-    // Calculate distraction time more accurately
-    // Distraction time should be the difference between screen time and focus time
-    // But never exceed screen time or be negative
-    const rawDistractionTime = Math.max(0, localData.screenTime - localData.focusTime);
+    // Calculate distraction time based on multiple factors
+    // 1. Base distraction time from tab switches (2 minutes per switch)
+    const tabSwitchPenalty = localData.tabSwitches * 2 * 60 * 1000; // 2 minutes per switch
 
-    // If we don't have focus tracking data, estimate based on distraction events
-    // Each distraction represents about 2-3 minutes of lost focus (conservative estimate)
-    const estimatedFromDistractions = localData.distractions * 120000; // 2 minutes per distraction
+    // 2. Additional penalty for quick switches (logged as distractions)
+    const quickSwitchPenalty = localData.distractions * 3 * 60 * 1000; // 3 minutes per quick switch
 
-    // Use the smaller of the two estimates, but cap at total screen time
-    const calculatedDistractionTime = localData.focusTime > 0
-      ? Math.min(rawDistractionTime, localData.screenTime)
-      : Math.min(estimatedFromDistractions, localData.screenTime * 0.6); // Max 60% if no focus data
+    // 3. Time spent on non-focus activities
+    const nonFocusTime = Math.max(0, localData.screenTime - localData.focusTime);
+
+    // Total distraction time is the sum of penalties and non-focus time
+    // But cap it at 80% of total screen time to be realistic
+    const calculatedDistractionTime = Math.min(
+      tabSwitchPenalty + quickSwitchPenalty + nonFocusTime,
+      localData.screenTime * 0.8
+    );
 
     return {
       totalFocusTime: localData.focusTime,
       totalScreenTime: localData.screenTime,
       appSwitches: localData.tabSwitches,
-      distractionTime: calculatedDistractionTime,
+      distractionTime: Math.max(0, calculatedDistractionTime),
       sessionCount: localData.focusSessions,
       distractionCount: localData.distractions,
       activities: [],
