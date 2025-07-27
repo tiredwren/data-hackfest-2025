@@ -32,11 +32,34 @@ export default function PomodoroTimer() {
   const [customBreak, setCustomBreak] = useState("5");
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const presets = [
     { label: "25/5", focus: 25 * 60, break: 5 * 60 },
     { label: "50/10", focus: 50 * 60, break: 10 * 60 },
   ];
+
+  // Initialize audio element
+  useEffect(() => {
+    // Create a simple ding sound using Web Audio API
+    const createDingSound = () => {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.value = 800; // High frequency for ding sound
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+    };
+
+    audioRef.current = { play: createDingSound } as any;
+  }, []);
 
   useEffect(() => {
     if (isRunning) {
