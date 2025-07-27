@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useActivityTracking } from "@/hooks/useActivityTracking";
 import { useRealUsageStats } from "@/hooks/useRealUsageStats";
 import { useNotifications } from "@/hooks/useNotifications";
+import { geminiService } from "@/services/geminiService";
 import { toast } from "sonner";
 
 export default function Dashboard() {
@@ -29,9 +30,13 @@ export default function Dashboard() {
   
   const [focusSessionRunning, setFocusSessionRunning] = useState(false);
   const [focusRemaining, setFocusRemaining] = useState<number>(0);
+  const [aiInsights, setAiInsights] = useState<string>("");
+  const [focusTip, setFocusTip] = useState<string>("");
+  const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
 
   useEffect(() => {
     requestNotificationPermission();
+    generateFocusTip();
 
     const focusState = localStorage.getItem("focusSession");
     if (focusState) {
@@ -76,6 +81,30 @@ export default function Dashboard() {
       toast.success("Focus session started! Stay concentrated.");
     }
     navigate('/pomodoro');
+  };
+
+  const generateAIInsights = async () => {
+    if (!stats) return;
+
+    setIsGeneratingInsights(true);
+    try {
+      const insights = await geminiService.analyzeUsagePatterns(stats);
+      setAiInsights(insights);
+      toast.success("AI insights generated!");
+    } catch (error) {
+      toast.error("Failed to generate AI insights");
+    } finally {
+      setIsGeneratingInsights(false);
+    }
+  };
+
+  const generateFocusTip = async () => {
+    try {
+      const tip = await geminiService.generateFocusTip();
+      setFocusTip(tip);
+    } catch (error) {
+      console.error("Failed to generate focus tip:", error);
+    }
   };
 
   const formatTime = (milliseconds: number) => {
@@ -247,6 +276,49 @@ export default function Dashboard() {
               </Button>
             </div>
           </div>
+
+          {/* AI Insights */}
+          <div className="bg-card border rounded-lg p-4 mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold">AI Insights</h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={generateAIInsights}
+                disabled={isGeneratingInsights || !stats}
+              >
+                {isGeneratingInsights ? "Generating..." : "Get Insights"}
+              </Button>
+            </div>
+            {aiInsights ? (
+              <div className="text-sm text-muted-foreground whitespace-pre-line">
+                {aiInsights}
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">
+                {!geminiService.isConfigured() ? (
+                  <div>
+                    <p>🤖 Enable AI insights by adding your Gemini API key:</p>
+                    <p className="mt-2 font-mono text-xs bg-muted p-2 rounded">
+                      Add VITE_GEMINI_API_KEY to your environment variables
+                    </p>
+                  </div>
+                ) : (
+                  "Click 'Get Insights' to analyze your usage patterns with AI"
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Focus Tip */}
+          {focusTip && (
+            <div className="bg-card border rounded-lg p-4 mb-4">
+              <h3 className="font-semibold mb-3">Focus Tip</h3>
+              <div className="text-sm text-muted-foreground">
+                {focusTip}
+              </div>
+            </div>
+          )}
 
           {/* Today's Insights */}
           <div className="bg-card border rounded-lg p-4">
