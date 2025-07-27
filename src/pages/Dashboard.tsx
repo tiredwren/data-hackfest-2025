@@ -97,14 +97,7 @@ export default function Dashboard() {
     }
   };
 
-  const generateFocusTip = async () => {
-    try {
-      const tip = await geminiService.generateFocusTip();
-      setFocusTip(tip);
-    } catch (error) {
-      console.error("Failed to generate focus tip:", error);
-    }
-  };
+
 
   const formatTime = (milliseconds: number) => {
     const totalSeconds = Math.floor(milliseconds / 1000);
