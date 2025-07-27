@@ -262,7 +262,11 @@ export default function Dashboard() {
           <div className="bg-card border rounded-lg p-4">
             <h3 className="font-semibold mb-3">Today's Insights</h3>
             <div className="space-y-3">
-              {stats ? (
+              {isLoading ? (
+                <div className="text-center text-muted-foreground">
+                  <p className="text-sm">Loading insights...</p>
+                </div>
+              ) : stats ? (
                 <>
                   <div className="flex items-start gap-3">
                     <div className="w-2 h-2 rounded-full bg-focus mt-2"></div>
