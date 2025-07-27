@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pause, Play, RefreshCw, Timer } from "lucide-react";
+import { Pause, Play, RefreshCw, Timer, Music } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { App } from "@capacitor/app";
 import { LocalNotifications } from "@capacitor/local-notifications";
@@ -22,6 +22,13 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function PomodoroTimer() {
   const navigate = useNavigate();
