@@ -31,7 +31,7 @@ export default function Dashboard() {
   const [focusSessionRunning, setFocusSessionRunning] = useState(false);
   const [focusRemaining, setFocusRemaining] = useState<number>(0);
   const [aiInsights, setAiInsights] = useState<string>("");
-  const [focusTip, setFocusTip] = useState<string>("");
+
   const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
 
   useEffect(() => {
