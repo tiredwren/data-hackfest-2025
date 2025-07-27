@@ -200,6 +200,8 @@ export default function PomodoroTimer() {
     handlePresetSelect(focus * 60, breakT * 60);
     // Start the timer after setting custom time
     setIsRunning(true);
+    // Close the dialog
+    setIsCustomDialogOpen(false);
   };
 
 
