@@ -152,6 +152,50 @@ export default function PatternAnalysis() {
         </Card>
       </div>
 
+      {/* AI Insights */}
+      <Card className="mb-6">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="h-5 w-5 text-focus" />
+              AI Pattern Analysis
+            </CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={generateAIInsights}
+              disabled={isGeneratingInsights || !stats || !geminiService.isConfigured()}
+            >
+              {isGeneratingInsights ? "Analyzing..." : "Get AI Insights"}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {aiInsights ? (
+            <div className="bg-muted/50 border rounded-lg p-4">
+              <div className="text-sm text-foreground whitespace-pre-line leading-relaxed">
+                {aiInsights}
+              </div>
+            </div>
+          ) : (
+            <div className="text-muted-foreground text-center py-8">
+              {!geminiService.isConfigured() ? (
+                <div>
+                  <Brain className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
+                  <p className="mb-2">🤖 AI insights unavailable</p>
+                  <p className="text-xs">Configure your Gemini API key to unlock AI-powered pattern analysis</p>
+                </div>
+              ) : (
+                <div>
+                  <Brain className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
+                  <p>Click "Get AI Insights" to analyze your usage patterns with AI</p>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Distraction Analysis */}
       <Card className="mb-6">
         <CardHeader>
