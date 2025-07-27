@@ -236,7 +236,7 @@ export default function PomodoroTimer() {
         </TabsContent>
 
         <TabsContent value="custom" className="mt-4">
-          <Dialog>
+          <Dialog open={isCustomDialogOpen} onOpenChange={setIsCustomDialogOpen}>
              <DialogTrigger asChild>
               <Button variant="outline" className="w-full">
                 Set Custom Time
