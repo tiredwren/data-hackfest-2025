@@ -106,7 +106,7 @@ export default function PomodoroTimer() {
   const cycleNumber = Math.floor(elapsed / cycleLength) + 1;
   const progress = (elapsed / totalTime) * 100;
 
-  // Detect phase change → play ding + 1-sec pause
+  // Detect phase change → play beep + 1-sec pause
   useEffect(() => {
     if (elapsed === 0) return;
 
@@ -114,10 +114,8 @@ export default function PomodoroTimer() {
     if (lastMode !== mode) {
       lastModeRef.current = mode;
 
-      if (dingSound.current) {
-        dingSound.current.currentTime = 0;
-        dingSound.current.play();
-      }
+      // Play beep sound at phase transitions
+      playBeepSound();
 
       toast({
         title: mode === "focus" ? "Focus Time" : "Break Time",
