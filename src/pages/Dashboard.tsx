@@ -269,38 +269,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* AI Insights */}
-          <div className="bg-card border rounded-lg p-4 mb-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold">AI Insights</h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={generateAIInsights}
-                disabled={isGeneratingInsights || !stats}
-              >
-                {isGeneratingInsights ? "Generating..." : "Get Insights"}
-              </Button>
-            </div>
-            {aiInsights ? (
-              <div className="text-sm text-muted-foreground whitespace-pre-line">
-                {aiInsights}
-              </div>
-            ) : (
-              <div className="text-sm text-muted-foreground">
-                {!geminiService.isConfigured() ? (
-                  <div>
-                    <p>🤖 Enable AI insights by adding your Gemini API key:</p>
-                    <p className="mt-2 font-mono text-xs bg-muted p-2 rounded">
-                      Add VITE_GEMINI_API_KEY to your environment variables
-                    </p>
-                  </div>
-                ) : (
-                  "Click 'Get Insights' to analyze your usage patterns with AI"
-                )}
-              </div>
-            )}
-          </div>
+
 
 
 
