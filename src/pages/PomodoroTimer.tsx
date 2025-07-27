@@ -230,6 +230,11 @@ export default function PomodoroTimer() {
 
   useEffect(() => {
     LocalNotifications.requestPermissions();
+
+    // Cleanup music on unmount
+    return () => {
+      stopMusic();
+    };
   }, []);
 
   // Timer logic
