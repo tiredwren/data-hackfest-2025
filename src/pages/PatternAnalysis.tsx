@@ -15,7 +15,7 @@ import { toast } from "sonner";
 export default function PatternAnalysis() {
   const navigate = useNavigate();
   const today = new Date().toISOString().split('T')[0];
-  const { stats } = useRealUsageStats({
+  const { stats, isLoading } = useRealUsageStats({
     startDate: today,
     endDate: today
   });
