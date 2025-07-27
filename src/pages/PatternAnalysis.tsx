@@ -15,7 +15,7 @@ import { toast } from "sonner";
 export default function PatternAnalysis() {
   const navigate = useNavigate();
   const today = new Date().toISOString().split('T')[0];
-  const { stats } = useRealUsageStats({
+  const { stats, isLoading } = useRealUsageStats({
     startDate: today,
     endDate: today
   });
@@ -63,7 +63,7 @@ export default function PatternAnalysis() {
       console.error('Error generating AI insights:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
-        setAiInsights('⚠️ Daily AI usage limit reached. Insights will be available tomorrow!\n\nIn the meantime, review your patterns manually using the charts above.');
+        setAiInsights('��️ Daily AI usage limit reached. Insights will be available tomorrow!\n\nIn the meantime, review your patterns manually using the charts above.');
         toast.error("Daily AI limit reached");
       } else {
         setAiInsights('🤖 AI insights temporarily unavailable. You can still analyze your patterns using the visualizations above!\n\nTry refreshing in a few minutes or check your internet connection.');
@@ -73,27 +73,38 @@ export default function PatternAnalysis() {
     setIsGeneratingInsights(false);
   };
 
-  // Generate summary on first load
-  useEffect(() => {
-    if (stats) {
-      generateAISummary();
-    }
-  }, [stats]);
 
-  const formatSummaryText = (text: string) => {
-    // Remove ** formatting and convert to proper heading if needed
-    const cleanedText = text.replace(/\*\*(.*?)\*\*/g, '$1');
 
-    // Split by sentences and format if there are headings
-    const sentences = cleanedText.split(/(?<=[.!?])\s+/);
+  const formatAIText = (text: string) => {
+    // Split text into lines
+    const lines = text.split('\n').filter(line => line.trim());
 
-    return sentences.map((sentence, index) => {
-      // If sentence looks like a heading (short, at start, etc.)
-      if (index === 0 && sentence.length < 50 && !sentence.includes('.')) {
-        return <h2 key={index} className="text-lg font-semibold mb-2">{sentence}</h2>;
+    return lines.map((line, index) => {
+      const trimmedLine = line.trim();
+
+      // Convert text surrounded by ** to headings
+      if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
+        const headingText = trimmedLine.replace(/\*\*/g, '');
+        return <h2 key={index} className="text-lg font-semibold mb-2 mt-4">{headingText}</h2>;
       }
-      return <span key={index}>{sentence}{index < sentences.length - 1 ? ' ' : ''}</span>;
-    });
+
+      // Handle lines that contain ** formatting
+      const formattedLine = trimmedLine.replace(/\*\*(.*?)\*\*/g, (match, content) => {
+        return content; // Remove ** but keep content for inline headings
+      });
+
+      // If line looks like a heading after ** removal (short, no punctuation at end)
+      if (formattedLine !== trimmedLine && formattedLine.length < 50 && !formattedLine.match(/[.!?]$/)) {
+        return <h2 key={index} className="text-lg font-semibold mb-2 mt-4">{formattedLine}</h2>;
+      }
+
+      // Regular paragraph
+      if (formattedLine) {
+        return <p key={index} className="mb-2">{formattedLine}</p>;
+      }
+
+      return null;
+    }).filter(Boolean);
   };
 
   const handleAcceptSuggestion = () => {
@@ -143,7 +154,7 @@ export default function PatternAnalysis() {
             <div className="space-y-4">
               <div className="bg-focus/10 border border-focus/20 rounded-lg p-4">
                 <div className="text-foreground leading-relaxed">
-                  {formatSummaryText(aiSummary)}
+                  {formatAIText(aiSummary)}
                 </div>
               </div>
               {suggestion && (
@@ -237,8 +248,8 @@ export default function PatternAnalysis() {
         <CardContent>
           {aiInsights ? (
             <div className="bg-muted/50 border rounded-lg p-4">
-              <div className="text-sm text-foreground whitespace-pre-line leading-relaxed">
-                {aiInsights}
+              <div className="text-sm text-foreground leading-relaxed">
+                {formatAIText(aiInsights)}
               </div>
             </div>
           ) : (
@@ -284,7 +295,7 @@ export default function PatternAnalysis() {
               <div>
                 <p className="text-sm text-muted-foreground">Peak Focus Hour</p>
                 <p className="text-lg font-semibold">
-                  {stats?.totalFocusTime > 0 ? '9:00 - 11:00 AM' : 'No data yet'}
+                  {isLoading ? 'Loading...' : (stats?.totalFocusTime > 0 ? '9:00 - 11:00 AM' : 'No data yet')}
                 </p>
               </div>
             </div>
@@ -300,11 +311,11 @@ export default function PatternAnalysis() {
               <div>
                 <p className="text-sm text-muted-foreground">Most Distracting</p>
                 <p className="text-lg font-semibold">
-                  {stats?.activities?.find(activity =>
+                  {isLoading ? 'Loading...' : (stats?.activities?.find(activity =>
                     activity.title?.toLowerCase().includes('instagram') ||
                     activity.title?.toLowerCase().includes('tiktok') ||
                     activity.title?.toLowerCase().includes('facebook')
-                  )?.title || 'Social Media'}
+                  )?.title || 'Social Media')}
                 </p>
               </div>
             </div>
@@ -320,10 +331,10 @@ export default function PatternAnalysis() {
               <div>
                 <p className="text-sm text-muted-foreground">Avg Session</p>
                 <p className="text-lg font-semibold">
-                  {stats?.activities?.length > 0
+                  {isLoading ? 'Loading...' : (stats?.activities?.length > 0
                     ? `${Math.round(stats.totalScreenTime / (stats.activities.length * 1000 * 60))} min`
                     : 'No data'
-                  }
+                  )}
                 </p>
               </div>
             </div>
