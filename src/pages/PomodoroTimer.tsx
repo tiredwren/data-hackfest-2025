@@ -83,6 +83,151 @@ export default function PomodoroTimer() {
     }
   };
 
+  // Music generation functions
+  const createLofiMusic = (audioContext: AudioContext) => {
+    const gainNode = audioContext.createGain();
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.connect(audioContext.destination);
+
+    const oscillators: OscillatorNode[] = [];
+
+    // Create multiple oscillators for a lofi sound
+    const frequencies = [220, 330, 440, 550]; // A3, E4, A4, C#5
+
+    frequencies.forEach((freq, index) => {
+      const osc = audioContext.createOscillator();
+      const oscGain = audioContext.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+      oscGain.gain.setValueAtTime(0.025, audioContext.currentTime);
+
+      osc.connect(oscGain);
+      oscGain.connect(gainNode);
+
+      osc.start();
+      oscillators.push(osc);
+
+      // Add slight frequency modulation for warmth
+      setTimeout(() => {
+        if (osc.frequency) {
+          osc.frequency.setValueAtTime(freq + Math.sin(Date.now() / 1000) * 2, audioContext.currentTime);
+        }
+      }, index * 500);
+    });
+
+    return { oscillators, gainNode };
+  };
+
+  const createClassicalMusic = (audioContext: AudioContext) => {
+    const gainNode = audioContext.createGain();
+    gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
+    gainNode.connect(audioContext.destination);
+
+    const oscillators: OscillatorNode[] = [];
+
+    // Classical piano-like frequencies (C major scale)
+    const frequencies = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+
+    frequencies.forEach((freq, index) => {
+      const osc = audioContext.createOscillator();
+      const oscGain = audioContext.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+      oscGain.gain.setValueAtTime(0.03, audioContext.currentTime);
+
+      osc.connect(oscGain);
+      oscGain.connect(gainNode);
+
+      osc.start();
+      oscillators.push(osc);
+    });
+
+    return { oscillators, gainNode };
+  };
+
+  const createJazzMusic = (audioContext: AudioContext) => {
+    const gainNode = audioContext.createGain();
+    gainNode.gain.setValueAtTime(0.09, audioContext.currentTime);
+    gainNode.connect(audioContext.destination);
+
+    const oscillators: OscillatorNode[] = [];
+
+    // Jazz chord frequencies (Dm7)
+    const frequencies = [293.66, 349.23, 415.30, 523.25]; // D4, F4, Ab4, C5
+
+    frequencies.forEach((freq, index) => {
+      const osc = audioContext.createOscillator();
+      const oscGain = audioContext.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+      oscGain.gain.setValueAtTime(0.025, audioContext.currentTime);
+
+      osc.connect(oscGain);
+      oscGain.connect(gainNode);
+
+      osc.start();
+      oscillators.push(osc);
+    });
+
+    return { oscillators, gainNode };
+  };
+
+  const startMusic = () => {
+    if (selectedMusic === "none" || isMusicPlaying) return;
+
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioContextRef.current = audioContext;
+
+      let musicNodes;
+      switch (selectedMusic) {
+        case "lofi":
+          musicNodes = createLofiMusic(audioContext);
+          break;
+        case "classical":
+          musicNodes = createClassicalMusic(audioContext);
+          break;
+        case "jazz":
+          musicNodes = createJazzMusic(audioContext);
+          break;
+        default:
+          return;
+      }
+
+      musicNodesRef.current = musicNodes;
+      setIsMusicPlaying(true);
+    } catch (error) {
+      console.warn("Could not start background music:", error);
+    }
+  };
+
+  const stopMusic = () => {
+    if (!isMusicPlaying || !musicNodesRef.current.oscillators.length) return;
+
+    try {
+      musicNodesRef.current.oscillators.forEach(osc => {
+        try {
+          osc.stop();
+        } catch (e) {
+          // Oscillator may already be stopped
+        }
+      });
+
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+
+      musicNodesRef.current = { oscillators: [], gainNode: null };
+      setIsMusicPlaying(false);
+    } catch (error) {
+      console.warn("Could not stop background music:", error);
+    }
+  };
+
   useEffect(() => {
     LocalNotifications.requestPermissions();
   }, []);
