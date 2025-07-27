@@ -248,8 +248,8 @@ export default function PatternAnalysis() {
         <CardContent>
           {aiInsights ? (
             <div className="bg-muted/50 border rounded-lg p-4">
-              <div className="text-sm text-foreground whitespace-pre-line leading-relaxed">
-                {aiInsights}
+              <div className="text-sm text-foreground leading-relaxed">
+                {formatAIText(aiInsights)}
               </div>
             </div>
           ) : (
