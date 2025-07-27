@@ -39,15 +39,36 @@ export default function PomodoroTimer() {
   const cycleLength = duration + breakDuration;
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const lastModeRef = useRef<"focus" | "break">("focus");
-
-
 
   const presets = [
     { label: "0.2/0.05", focus: 5, break: 3 },
     { label: "25/5", focus: 25 * 60, break: 5 * 60 },
     { label: "50/10", focus: 50 * 60, break: 10 * 60 },
   ];
+
+  // Initialize audio element
+  useEffect(() => {
+    // Create a simple ding sound using Web Audio API
+    const createDingSound = () => {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.value = 800; // High frequency for ding sound
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+    };
+
+    audioRef.current = { play: createDingSound } as any;
+  }, []);
 
   useEffect(() => {
     LocalNotifications.requestPermissions();
@@ -65,14 +86,26 @@ export default function PomodoroTimer() {
         setElapsed((prev) => {
           if (prev + 1 >= totalTime) {
             clearInterval(intervalRef.current!);
+            // Play ding sound when session ends
+            if (audioRef.current) {
+              try {
+                audioRef.current.play();
+              } catch (error) {
+                console.warn("Could not play ding sound:", error);
+              }
+            }
+
+            if (mode === "focus") {
+              setMode("break");
+              setTimeLeft(breakDuration);
+            } else {
+              setMode("focus");
+              setTimeLeft(duration);
+            }
+            return 0;
             setIsRunning(false);
             toast({ title: "Pomodoro Complete", description: "3 cycles done!" });
             return totalTime;
-
-
-
-
-
           }
           return prev + 1;
         });
