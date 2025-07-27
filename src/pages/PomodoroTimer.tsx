@@ -33,6 +33,7 @@ export default function PomodoroTimer() {
 
   const [customFocus, setCustomFocus] = useState("25");
   const [customBreak, setCustomBreak] = useState("5");
+  const [isCustomDialogOpen, setIsCustomDialogOpen] = useState(false);
 
   const cycles = 3;
   const totalTime = (duration + breakDuration) * cycles;
