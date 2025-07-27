@@ -36,6 +36,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     requestNotificationPermission();
+    generateFocusTip();
 
     const focusState = localStorage.getItem("focusSession");
     if (focusState) {
