@@ -258,11 +258,14 @@ export default function PomodoroTimer() {
         description: mode === "focus" ? "Back to work!" : "Take a break!",
       });
 
-      // Pause for 1 sec then resume
+      // Brief pause for transition without stopping music
+      const wasRunning = isRunning;
       setIsRunning(false);
-      setTimeout(() => setIsRunning(true), 1000);
+      setTimeout(() => {
+        if (wasRunning) setIsRunning(true);
+      }, 1000);
     }
-  }, [mode, elapsed]);
+  }, [mode, elapsed, isRunning]);
 
   // Resume from background
   useEffect(() => {
