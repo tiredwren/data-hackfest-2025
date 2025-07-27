@@ -193,20 +193,26 @@ export default function PomodoroTimer() {
   // Timer logic
   useEffect(() => {
     if (isRunning) {
-      // Start music when timer starts
-      if (selectedMusic !== "none" && !isMusicPlaying) {
-        startMusic();
+      // Start or resume music when timer starts
+      if (selectedMusic !== "none") {
+        if (!isMusicPlaying && !audioRef.current) {
+          startMusic();
+        } else if (audioRef.current && !audioRef.current.paused) {
+          // Music is already playing
+        } else if (audioRef.current) {
+          resumeMusic();
+        }
       }
 
       intervalRef.current = setInterval(() => {
         setElapsed((prev) => {
           if (prev + 1 >= totalTime) {
             clearInterval(intervalRef.current!);
-            // Stop music and play beep sound when session ends
+            // Stop music and play beep sound when all sessions are complete
             stopMusic();
             playBeepSound();
             setIsRunning(false);
-            toast({ title: "Pomodoro Complete", description: "3 cycles done!" });
+            toast({ title: "Pomodoro Complete", description: "All 3 cycles done!" });
             return totalTime;
           }
           return prev + 1;
@@ -215,14 +221,14 @@ export default function PomodoroTimer() {
     } else {
       clearInterval(intervalRef.current!);
       // Pause music when timer is paused
-      if (isMusicPlaying && audioRef.current) {
-        audioRef.current.pause();
+      if (audioRef.current && !audioRef.current.paused) {
+        pauseMusic();
       }
     }
     return () => {
       clearInterval(intervalRef.current!);
     };
-  }, [isRunning, totalTime, selectedMusic, isMusicPlaying]);
+  }, [isRunning, totalTime, selectedMusic]);
 
 
   // Calculate current phase and time left
