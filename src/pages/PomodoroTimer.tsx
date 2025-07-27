@@ -79,23 +79,8 @@ export default function PomodoroTimer() {
         setElapsed((prev) => {
           if (prev + 1 >= totalTime) {
             clearInterval(intervalRef.current!);
-            // Play ding sound when session ends
-            if (audioRef.current) {
-              try {
-                audioRef.current.play();
-              } catch (error) {
-                console.warn("Could not play ding sound:", error);
-              }
-            }
-
-            if (mode === "focus") {
-              setMode("break");
-              setTimeLeft(breakDuration);
-            } else {
-              setMode("focus");
-              setTimeLeft(duration);
-            }
-            return 0;
+            // Play beep sound when session ends
+            playBeepSound();
             setIsRunning(false);
             toast({ title: "Pomodoro Complete", description: "3 cycles done!" });
             return totalTime;
