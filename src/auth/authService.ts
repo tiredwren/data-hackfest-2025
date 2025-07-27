@@ -6,9 +6,9 @@ let auth0: Auth0Client | null = null;
 export const initAuth0 = async (): Promise<Auth0Client> => {
   if (!auth0) {
     auth0 = await createAuth0Client({
-      domain: import.meta.env.VITE_AUTH0_DOMAIN!,
-      client_id: import.meta.env.VITE_AUTH0_CLIENT_ID!,
-      redirect_uri: import.meta.env.VITE_AUTH0_REDIRECT_URI!,
+                    domain: 'dev-a2jy8021kbq84xg3.us.auth0.com',
+                    client_id: 'YITB8EnOGXSV22ueSqQPJnht678kYVXP',
+                    redirect_uri: 'clarity://dev-a2jy8021kbq84xg3.us.auth0.com/android/com.duodevelopers.clarity/callback',
       cacheLocation: "localstorage",
       useRefreshTokens: true,
     });
@@ -21,10 +21,11 @@ export const login = async () => {
   await client.loginWithRedirect();
 };
 
-export const handleRedirectCallback = async () => {
+export const handleRedirectCallback = async (url?: string) => {
   const client = await initAuth0();
-  await client.handleRedirectCallback();
+  await client.handleRedirectCallback(url);
 };
+
 
 export const getUser = async () => {
   const client = await initAuth0();
