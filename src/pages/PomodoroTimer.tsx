@@ -197,6 +197,8 @@ export default function PomodoroTimer() {
     const focus = parseInt(customFocus || "25", 10);
     const breakT = parseInt(customBreak || "5", 10);
     handlePresetSelect(focus * 60, breakT * 60);
+    // Start the timer after setting custom time
+    setIsRunning(true);
   };
 
 
