@@ -204,15 +204,16 @@ export default function PomodoroTimer() {
                 Set Custom Time
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Custom Time</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
+              <div className="space-y-4 py-4">
                 <div>
                   <label className="text-sm">Focus (minutes)</label>
                   <Input
                     type="number"
+                    inputMode="numeric"
                     value={customFocus}
                     onChange={(e) => setCustomFocus(e.target.value)}
                   />
@@ -221,6 +222,7 @@ export default function PomodoroTimer() {
                   <label className="text-sm">Break (minutes)</label>
                   <Input
                     type="number"
+                    inputMode="numeric"
                     value={customBreak}
                     onChange={(e) => setCustomBreak(e.target.value)}
                   />
