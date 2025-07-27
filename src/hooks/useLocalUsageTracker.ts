@@ -6,6 +6,7 @@ interface LocalUsageData {
   tabSwitches: number;
   distractions: number;
   focusSessions: number;
+  distractionTime: number;
   lastUpdate: string;
 }
 
@@ -17,18 +18,20 @@ export const useLocalUsageTracker = () => {
   const lastActiveRef = useRef<number>(Date.now());
   const tabSwitchCountRef = useRef<number>(0);
   const distractionCountRef = useRef<number>(0);
+  const distractionTimeRef = useRef<number>(0);
 
   // Initialize data from localStorage
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
     const storedData = localStorage.getItem(`usage_${today}`);
-    
+
     if (storedData) {
       const data: LocalUsageData = JSON.parse(storedData);
       activeTimeRef.current = data.screenTime;
       focusTimeRef.current = data.focusTime;
       tabSwitchCountRef.current = data.tabSwitches;
       distractionCountRef.current = data.distractions;
+      distractionTimeRef.current = data.distractionTime || 0;
     }
   }, []);
 
@@ -47,10 +50,21 @@ export const useLocalUsageTracker = () => {
           // User switched away - count as tab switch
           tabSwitchCountRef.current += 1;
 
-          // Check if it's a distraction (based on simple heuristics)
+          // Every tab switch adds to distraction time
+          // Base distraction penalty: 2 minutes per switch
+          const baseDistraction = 2 * 60 * 1000; // 2 minutes in milliseconds
+
+          // Quick switches (less than 30 seconds) are more distracting
           const timeSinceLastSwitch = now - lastVisibilityChange;
-          if (timeSinceLastSwitch < 30000) { // Less than 30 seconds = quick switch = potential distraction
+          const isQuickSwitch = timeSinceLastSwitch < 30000;
+
+          if (isQuickSwitch) {
+            // Quick switch penalty: 3 minutes
             distractionCountRef.current += 1;
+            distractionTimeRef.current += baseDistraction * 1.5; // 3 minutes penalty
+          } else {
+            // Regular switch penalty: 2 minutes
+            distractionTimeRef.current += baseDistraction;
           }
         }
         setIsActive(wasActive);
@@ -122,17 +136,19 @@ export const useLocalUsageTracker = () => {
       screenTime: activeTimeRef.current,
       tabSwitches: tabSwitchCountRef.current,
       distractions: distractionCountRef.current,
+      distractionTime: distractionTimeRef.current,
       focusSessions: parseInt(localStorage.getItem('todayFocusSessions') || '0'),
       lastUpdate: new Date().toISOString()
     };
 
     localStorage.setItem(`usage_${today}`, JSON.stringify(data));
-    
+
     // Also store in individual keys for backwards compatibility
     localStorage.setItem('todayFocusTime', focusTimeRef.current.toString());
     localStorage.setItem('todayScreenTime', activeTimeRef.current.toString());
     localStorage.setItem('todayTabSwitches', tabSwitchCountRef.current.toString());
     localStorage.setItem('todayDistractions', distractionCountRef.current.toString());
+    localStorage.setItem('todayDistractionTime', distractionTimeRef.current.toString());
   };
 
   const startFocusMode = () => {
@@ -152,6 +168,7 @@ export const useLocalUsageTracker = () => {
       screenTime: activeTimeRef.current,
       tabSwitches: tabSwitchCountRef.current,
       distractions: distractionCountRef.current,
+      distractionTime: distractionTimeRef.current,
       focusSessions: parseInt(localStorage.getItem('todayFocusSessions') || '0')
     };
   };

@@ -4,6 +4,8 @@ import { Pause, Play, RefreshCw, Timer, Music } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { App } from "@capacitor/app";
 import { LocalNotifications } from "@capacitor/local-notifications";
+import { useLocalUsageTracker } from "@/hooks/useLocalUsageTracker";
+import { useActivityTracking } from "@/hooks/useActivityTracking";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,6 +38,10 @@ export default function PomodoroTimer() {
   const [breakDuration, setBreakDuration] = useState(5 * 60);
   const [elapsed, setElapsed] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
+
+  // Initialize distraction tracking
+  const { startFocusMode, stopFocusMode, isFocusMode } = useLocalUsageTracker();
+  const { startFocusSession, endFocusSession, currentFocusSession, logDistraction } = useActivityTracking();
 
 
   const [customFocus, setCustomFocus] = useState("25");
@@ -144,6 +150,31 @@ export default function PomodoroTimer() {
     }
   };
 
+  const pauseMusic = () => {
+    if (!audioRef.current) return;
+
+    try {
+      audioRef.current.pause();
+      setIsMusicPlaying(false);
+    } catch (error) {
+      console.warn("Could not pause background music:", error);
+    }
+  };
+
+  const resumeMusic = () => {
+    if (!audioRef.current) return;
+
+    try {
+      audioRef.current.play().then(() => {
+        setIsMusicPlaying(true);
+      }).catch((error) => {
+        console.warn("Could not resume background music:", error);
+      });
+    } catch (error) {
+      console.warn("Could not resume background music:", error);
+    }
+  };
+
   const stopMusic = () => {
     if (!isMusicPlaying || !audioRef.current) return;
 
@@ -160,29 +191,73 @@ export default function PomodoroTimer() {
   useEffect(() => {
     LocalNotifications.requestPermissions();
 
-    // Cleanup music on unmount
+    // Track tab visibility changes for distraction tracking
+    const handleVisibilityChange = () => {
+      if (document.hidden && (isRunning || currentFocusSession)) {
+        // User switched away during timer - log as distraction
+        if (currentFocusSession) {
+          logDistraction('tab_switch_during_pomodoro', `User switched tabs during ${mode === 'focus' ? 'focus' : 'break'} session`);
+        }
+
+        // Show toast notification
+        toast({
+          title: "Stay Focused!",
+          description: "Tab switching during Pomodoro can break your concentration.",
+          variant: "destructive"
+        });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup music and listeners on unmount
     return () => {
       stopMusic();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [isRunning, currentFocusSession, logDistraction]);
 
   // Timer logic
   useEffect(() => {
     if (isRunning) {
-      // Start music when timer starts
-      if (selectedMusic !== "none" && !isMusicPlaying) {
-        startMusic();
+      // Start focus session tracking
+      if (!currentFocusSession) {
+        startFocusSession();
+      }
+      if (!isFocusMode) {
+        startFocusMode();
+      }
+
+      // Start or resume music when timer starts
+      if (selectedMusic !== "none") {
+        if (!isMusicPlaying && !audioRef.current) {
+          startMusic();
+        } else if (audioRef.current) {
+          resumeMusic();
+        }
       }
 
       intervalRef.current = setInterval(() => {
         setElapsed((prev) => {
           if (prev + 1 >= totalTime) {
             clearInterval(intervalRef.current!);
-            // Stop music and play beep sound when session ends
+            // Complete session - stop music, end tracking, play beep
             stopMusic();
             playBeepSound();
             setIsRunning(false);
-            toast({ title: "Pomodoro Complete", description: "3 cycles done!" });
+
+            // End focus tracking
+            if (currentFocusSession) {
+              endFocusSession();
+            }
+            if (isFocusMode) {
+              stopFocusMode();
+            }
+
+            toast({
+              title: "Pomodoro Complete!",
+              description: "All 3 cycles done! Great work staying focused!"
+            });
             return totalTime;
           }
           return prev + 1;
@@ -190,16 +265,13 @@ export default function PomodoroTimer() {
       }, 1000);
     } else {
       clearInterval(intervalRef.current!);
-      // Stop music when timer is paused
-      if (isMusicPlaying) {
-        stopMusic();
-      }
+      // Pause music when timer is paused (but don't stop session tracking)
+      pauseMusic();
     }
     return () => {
       clearInterval(intervalRef.current!);
-      stopMusic();
     };
-  }, [isRunning, totalTime, selectedMusic]);
+  }, [isRunning, totalTime, selectedMusic, currentFocusSession, isFocusMode, startFocusSession, endFocusSession, startFocusMode, stopFocusMode]);
 
 
   // Calculate current phase and time left
@@ -229,11 +301,14 @@ export default function PomodoroTimer() {
         description: mode === "focus" ? "Back to work!" : "Take a break!",
       });
 
-      // Pause for 1 sec then resume
+      // Brief pause for transition without stopping music
+      const wasRunning = isRunning;
       setIsRunning(false);
-      setTimeout(() => setIsRunning(true), 1000);
+      setTimeout(() => {
+        if (wasRunning) setIsRunning(true);
+      }, 1000);
     }
-  }, [mode, elapsed]);
+  }, [mode, elapsed, isRunning]);
 
   // Resume from background
   useEffect(() => {
@@ -272,6 +347,14 @@ export default function PomodoroTimer() {
     setElapsed(0);
     setIsRunning(false);
     stopMusic();
+
+    // End any active focus session when resetting
+    if (currentFocusSession) {
+      endFocusSession();
+    }
+    if (isFocusMode) {
+      stopFocusMode();
+    }
   };
   const progressColor = mode === "focus" ? "bg-green-500" : "bg-purple-400";
 
