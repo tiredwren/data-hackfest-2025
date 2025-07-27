@@ -33,6 +33,7 @@ export default function PomodoroTimer() {
 
   const [customFocus, setCustomFocus] = useState("25");
   const [customBreak, setCustomBreak] = useState("5");
+  const [isCustomDialogOpen, setIsCustomDialogOpen] = useState(false);
 
   const cycles = 3;
   const totalTime = (duration + breakDuration) * cycles;
@@ -197,6 +198,10 @@ export default function PomodoroTimer() {
     const focus = parseInt(customFocus || "25", 10);
     const breakT = parseInt(customBreak || "5", 10);
     handlePresetSelect(focus * 60, breakT * 60);
+    // Start the timer after setting custom time
+    setIsRunning(true);
+    // Close the dialog
+    setIsCustomDialogOpen(false);
   };
 
 
@@ -231,7 +236,7 @@ export default function PomodoroTimer() {
         </TabsContent>
 
         <TabsContent value="custom" className="mt-4">
-          <Dialog>
+          <Dialog open={isCustomDialogOpen} onOpenChange={setIsCustomDialogOpen}>
              <DialogTrigger asChild>
               <Button variant="outline" className="w-full">
                 Set Custom Time

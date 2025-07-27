@@ -171,41 +171,41 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <FocusCard
           title="Focus Time Today"
-          value={stats ? formatTime(stats.totalFocusTime) : "0m"}
-          description={stats && stats.totalScreenTime > 0 ? 
-            `${Math.round((stats.totalFocusTime / stats.totalScreenTime) * 100)}% of screen time` : 
+          value={isLoading ? "Loading..." : (stats ? formatTime(stats.totalFocusTime) : "0m")}
+          description={isLoading ? "Loading..." : (stats && stats.totalScreenTime > 0 ?
+            `${Math.round((stats.totalFocusTime / stats.totalScreenTime) * 100)}% of screen time` :
             "Start a focus session"
-          }
-          progress={stats && stats.totalScreenTime > 0 ? 
+          )}
+          progress={isLoading ? 0 : (stats && stats.totalScreenTime > 0 ?
             Math.round((stats.totalFocusTime / stats.totalScreenTime) * 100) : 0
-          }
+          )}
           variant="focus"
           icon={<Target className="h-4 w-4" />}
         />
 
         <FocusCard
           title="Tab Switches"
-          value={stats ? stats.appSwitches.toString() : "0"}
-          description={stats && stats.appSwitches > 20 ? "Higher than optimal" : "Good focus discipline"}
+          value={isLoading ? "Loading..." : (stats ? stats.appSwitches.toString() : "0")}
+          description={isLoading ? "Loading..." : (stats && stats.appSwitches > 20 ? "Higher than optimal" : "Good focus discipline")}
           variant={stats && stats.appSwitches > 20 ? "warning" : "calm"}
           icon={<Smartphone className="h-4 w-4" />}
         />
 
         <FocusCard
           title="Screen Time"
-          value={stats ? formatTime(stats.totalScreenTime) : "0m"}
-          description="Total active time today"
+          value={isLoading ? "Loading..." : (stats ? formatTime(stats.totalScreenTime) : "0m")}
+          description={isLoading ? "Loading..." : "Total active time today"}
           variant="calm"
           icon={<Clock className="h-4 w-4" />}
         />
 
         <FocusCard
           title="Distraction Time"
-          value={stats ? formatTime(stats.distractionTime) : "0m"}
-          description={stats && stats.totalScreenTime > 0 ? 
-            `${Math.round((stats.distractionTime / stats.totalScreenTime) * 100)}% of screen time` : 
+          value={isLoading ? "Loading..." : (stats ? formatTime(stats.distractionTime) : "0m")}
+          description={isLoading ? "Loading..." : (stats && stats.totalScreenTime > 0 ?
+            `${Math.round((stats.distractionTime / stats.totalScreenTime) * 100)}% of screen time` :
             "No distractions yet"
-          }
+          )}
           variant="warning"
           icon={<Zap className="h-4 w-4" />}
         />
@@ -262,7 +262,11 @@ export default function Dashboard() {
           <div className="bg-card border rounded-lg p-4">
             <h3 className="font-semibold mb-3">Today's Insights</h3>
             <div className="space-y-3">
-              {stats ? (
+              {isLoading ? (
+                <div className="text-center text-muted-foreground">
+                  <p className="text-sm">Loading insights...</p>
+                </div>
+              ) : stats ? (
                 <>
                   <div className="flex items-start gap-3">
                     <div className="w-2 h-2 rounded-full bg-focus mt-2"></div>
