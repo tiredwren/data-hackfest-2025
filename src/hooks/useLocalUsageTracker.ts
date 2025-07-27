@@ -36,24 +36,26 @@ export const useLocalUsageTracker = () => {
   useEffect(() => {
     let activityInterval: NodeJS.Timeout;
     let focusInterval: NodeJS.Timeout;
+    let lastVisibilityChange = Date.now();
 
     const handleVisibilityChange = () => {
       const now = Date.now();
       const wasActive = !document.hidden;
-      
+
       if (wasActive !== isActive) {
         if (!wasActive) {
           // User switched away - count as tab switch
           tabSwitchCountRef.current += 1;
-          
+
           // Check if it's a distraction (based on simple heuristics)
-          const timeSinceLastActive = now - lastActiveRef.current;
-          if (timeSinceLastActive < 30000) { // Less than 30 seconds = quick switch = potential distraction
+          const timeSinceLastSwitch = now - lastVisibilityChange;
+          if (timeSinceLastSwitch < 30000) { // Less than 30 seconds = quick switch = potential distraction
             distractionCountRef.current += 1;
           }
         }
         setIsActive(wasActive);
         lastActiveRef.current = now;
+        lastVisibilityChange = now;
         saveUsageData();
       }
     };
@@ -62,18 +64,29 @@ export const useLocalUsageTracker = () => {
       lastActiveRef.current = Date.now();
     };
 
-    // Track active time every second
-    if (isActive) {
+    // Track active time every second when page is visible
+    if (isActive && !document.hidden) {
       activityInterval = setInterval(() => {
         activeTimeRef.current += 1000;
+
+        // Auto-increment focus time for productive activities
+        // Check if we're on a focus-friendly domain or in focus mode
+        const currentDomain = window.location.hostname;
+        const isProductiveDomain = !isDistractionDomain(currentDomain);
+
+        if (isFocusMode || isProductiveDomain) {
+          focusTimeRef.current += 1000;
+        }
+
         saveUsageData();
       }, 1000);
     }
 
-    // Track focus time when in focus mode
-    if (isFocusMode && isActive) {
+    // Additional focus time tracking when explicitly in focus mode
+    if (isFocusMode && isActive && !document.hidden) {
       focusInterval = setInterval(() => {
-        focusTimeRef.current += 1000;
+        // Extra focus time credit for being in explicit focus mode
+        focusTimeRef.current += 500; // Bonus for focus mode
         saveUsageData();
       }, 1000);
     }
@@ -93,6 +106,14 @@ export const useLocalUsageTracker = () => {
       document.removeEventListener('click', handleUserActivity);
     };
   }, [isActive, isFocusMode]);
+
+  const isDistractionDomain = (domain: string): boolean => {
+    const distractionDomains = [
+      'youtube.com', 'instagram.com', 'facebook.com', 'twitter.com',
+      'x.com', 'tiktok.com', 'reddit.com', 'netflix.com', 'hulu.com', 'twitch.tv'
+    ];
+    return distractionDomains.some(d => domain.includes(d));
+  };
 
   const saveUsageData = () => {
     const today = new Date().toISOString().split('T')[0];
@@ -118,6 +139,7 @@ export const useLocalUsageTracker = () => {
     setIsFocusMode(true);
     const currentSessions = parseInt(localStorage.getItem('todayFocusSessions') || '0');
     localStorage.setItem('todayFocusSessions', (currentSessions + 1).toString());
+    saveUsageData();
   };
 
   const stopFocusMode = () => {
