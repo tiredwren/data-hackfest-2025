@@ -1,5 +1,6 @@
 import { FocusCard } from "@/components/FocusCard";
 import { AppUsageChart } from "@/components/AppUsageChart";
+import { HardcodedUsageChart } from "@/components/HardcodedUsageChart";
 import { DistractionAlert } from "@/components/DistractionAlert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +9,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useActivityTracking } from "@/hooks/useActivityTracking";
 import { useRealUsageStats } from "@/hooks/useRealUsageStats";
+import { useLocalUsageTracker } from "@/hooks/useLocalUsageTracker";
 import { useNotifications } from "@/hooks/useNotifications";
 import { geminiService } from "@/services/geminiService";
 import { toast } from "sonner";
@@ -15,19 +17,23 @@ import { toast } from "sonner";
 export default function Dashboard() {
   const navigate = useNavigate();
   const { requestNotificationPermission } = useNotifications();
-  
-  const { 
-    currentFocusSession, 
-    startFocusSession, 
+
+  const {
+    currentFocusSession,
+    startFocusSession,
     endFocusSession,
   } = useActivityTracking();
-  
+
+  // Real-time local usage tracking
+  const { getCurrentStats } = useLocalUsageTracker();
+  const [localStats, setLocalStats] = useState(getCurrentStats());
+
   const today = new Date().toISOString().split('T')[0];
   const { stats, isLoading, error, refetch } = useRealUsageStats({
     startDate: today,
     endDate: today
   });
-  
+
   const [focusSessionRunning, setFocusSessionRunning] = useState(false);
   const [focusRemaining, setFocusRemaining] = useState<number>(0);
 
@@ -47,7 +53,14 @@ export default function Dashboard() {
         localStorage.removeItem("focusSession");
       }
     }
-  }, []);
+
+    // Update local stats every second for real-time updates
+    const statsInterval = setInterval(() => {
+      setLocalStats(getCurrentStats());
+    }, 1000);
+
+    return () => clearInterval(statsInterval);
+  }, [getCurrentStats]);
 
   useEffect(() => {
     let timer: any;
@@ -201,11 +214,11 @@ export default function Dashboard() {
 
         <FocusCard
           title="Distraction Time"
-          value={isLoading ? "Loading..." : (stats ? formatTime(stats.distractionTime) : "0m")}
-          description={isLoading ? "Loading..." : (stats && stats.totalScreenTime > 0 ?
-            `${Math.min(Math.max(Math.round((stats.distractionTime / stats.totalScreenTime) * 100), 0), 100)}% of screen time` :
+          value={localStats.distractionTime > 0 ? formatTime(localStats.distractionTime) : "0m"}
+          description={localStats.screenTime > 0 ?
+            `${Math.min(Math.max(Math.round((localStats.distractionTime / localStats.screenTime) * 100), 0), 100)}% of screen time` :
             "No distractions yet"
-          )}
+          }
           variant="warning"
           icon={<Zap className="h-4 w-4" />}
         />
@@ -213,18 +226,7 @@ export default function Dashboard() {
 
       {/* Usage Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {stats && stats.activities.length > 0 ? (
-          <AppUsageChart />
-        ) : (
-          <Card className="lg:col-span-2">
-            <CardContent className="p-6 text-center">
-              <p className="text-muted-foreground">Activity tracking in progress...</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Use the app for a few minutes to see your usage patterns
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        <HardcodedUsageChart />
 
         {/* Quick Actions */}
         <div className="space-y-4">
